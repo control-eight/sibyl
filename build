@@ -1,0 +1,4 @@
+#!/bin/bash
+
+mvn clean install
+cp target/sibyl-1.0-SNAPSHOT.jar target/libs/

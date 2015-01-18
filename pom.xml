@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.my</groupId>
+    <artifactId>sibyl</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <hadoop-common.version>2.0.0-cdh4.3.0</hadoop-common.version>
+        <hbase.version>0.94.6-cdh4.3.0</hbase.version>
+
+        <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
+
+        <kiji-schema.version>1.4.0</kiji-schema.version>
+        <kiji-mapreduce.version>1.2.8</kiji-mapreduce.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.7.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.1.1</version>
+        </dependency>
+
+        <!--kiji -->
+        <dependency>
+            <groupId>org.kiji.common</groupId>
+            <artifactId>kiji-common-flags</artifactId>
+            <version>${kiji-common-flags.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.kiji.schema</groupId>
+            <artifactId>kiji-schema</artifactId>
+            <version>${kiji-schema.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kiji.mapreduce</groupId>
+            <artifactId>kiji-mapreduce</artifactId>
+            <version>${kiji-mapreduce.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--hadoop -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop-common.version}</version>
+            <!--<scope>provided</scope>-->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase</artifactId>
+            <version>${hbase.version}</version>
+            <!--<scope>provided</scope>-->
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>${hadoop-common.version}</version>
+            <!--<scope>provided</scope>-->
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <!-- Compile for Java 1.6, with warnings enabled. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <!-- Maven doesn't let me specify more than one command line
+                         flag with the same name, so I've used both styles of
+                         specifying compiler args to get all warnings except
+                         serialVersionUID. -->
+                    <compilerArguments> <Xlint /> </compilerArguments>
+                    <compilerArgument>-Xlint:-serial</compilerArgument>
+                    <testCompilerArguments> <Xlint /> </testCompilerArguments>
+                    <testCompilerArgument>-Xlint:-serial</testCompilerArgument>
+                    <!-- End of maven compiler args hack -->
+                    <encoding>UTF-8</encoding>
+                    <showDeprecation>true</showDeprecation>
+                    <showWarnings>true</showWarnings>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <excludes>
+                        <exclude>**/*.scala</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.9</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro-maven-plugin</artifactId>
+                <version>1.7.5</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>schema</goal>
+                            <goal>idl-protocol</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>kiji-repos</id>
+            <name>kiji-repos</name>
+            <url>https://repo.wibidata.com/artifactory/kiji</url>
+        </repository>
+        <repository>
+            <id>kiji-nightly</id>
+            <name>kiji-nightly</name>
+            <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+        </repository>
+    </repositories>
+
+</project>

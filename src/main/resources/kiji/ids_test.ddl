@@ -1,0 +1,11 @@
+CREATE TABLE ids WITH DESCRIPTION 'Ids'
+ROW KEY FORMAT RAW
+WITH LOCALITY GROUP default WITH DESCRIPTION 'Main locality group' (
+  MAXVERSIONS = 1,
+  TTL = FOREVER,
+  INMEMORY = true,
+  COMPRESSED WITH NONE,
+  FAMILY info WITH DESCRIPTION 'basic information' (
+    count "int" WITH DESCRIPTION 'Item sets count'
+  )
+);
