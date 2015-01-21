@@ -7,9 +7,13 @@ import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.exceptions.HBaseException;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author abykovsky
@@ -29,20 +33,50 @@ public class ItemSetsDao {
     }
 
     public void updateCount(String itemSetRowKey, Integer count) throws IOException {
-        Put p = new Put(Bytes.toBytes(itemSetRowKey));
-        p.add(COUNT_FAM, COUNT_COL, Bytes.toBytes(count));
+        Put p = makeUpdateCountPut(itemSetRowKey, count);
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
             itemSets.put(p);
         }
     }
 
-    public void updateCount(String itemSetRowKey, String itemIdColumnName, Integer count) throws IOException {
+    private Put makeUpdateCountPut(String itemSetRowKey, Integer count) {
         Put p = new Put(Bytes.toBytes(itemSetRowKey));
-        p.add(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName), Bytes.toBytes(count));
+        p.add(COUNT_FAM, COUNT_COL, Bytes.toBytes(count));
+        return p;
+    }
+
+    public void updateAssocCount(String itemSetRowKey, String itemIdColumnName, Integer count) throws IOException {
+        Put p = makeUpdateAssocCountPut(itemSetRowKey, itemIdColumnName, count);
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
             itemSets.put(p);
+        }
+    }
+
+    private Put makeUpdateAssocCountPut(String itemSetRowKey, String itemIdColumnName, Integer count) {
+        Put p = new Put(Bytes.toBytes(itemSetRowKey));
+        p.add(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName), Bytes.toBytes(count));
+        return p;
+    }
+
+    public void updateCounts(String itemSetRowKey, Integer count, Map<String, Integer> assocMap) throws IOException, HBaseException {
+
+        List<Put> batch = new ArrayList<>();
+        batch.add(makeUpdateCountPut(itemSetRowKey, count));
+
+        for (Map.Entry<String, Integer> entry : assocMap.entrySet()) {
+            batch.add(makeUpdateAssocCountPut(itemSetRowKey, entry.getKey(), entry.getValue()));
+        }
+
+        Object[] results = new Object[batch.size()];
+
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            try {
+                itemSets.batch(batch, results);
+            } catch (InterruptedException e) {
+                throw new HBaseException(e);
+            }
         }
     }
 
