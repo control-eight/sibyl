@@ -1,8 +1,12 @@
 package com.my.sibyl.itemsets.hbase.dao;
 
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
@@ -39,6 +43,30 @@ public class ItemSetsDao {
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
             itemSets.put(p);
+        }
+    }
+
+    public Integer getCount(String itemSetRowKey) throws IOException {
+        Get g = new Get(Bytes.toBytes(itemSetRowKey));
+        g.addColumn(COUNT_FAM, COUNT_COL);
+
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            Result result = itemSets.get(g);
+            Cell cell = result.getColumnLatestCell(COUNT_FAM, COUNT_COL);
+            if(cell == null) return null;
+            return Bytes.toInt(CellUtil.cloneValue(cell));
+        }
+    }
+
+    public Integer getCount(String itemSetRowKey, String itemIdColumnName) throws IOException {
+        Get g = new Get(Bytes.toBytes(itemSetRowKey));
+        g.addColumn(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
+
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            Result result = itemSets.get(g);
+            Cell cell = result.getColumnLatestCell(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
+            if(cell == null) return null;
+            return Bytes.toInt(CellUtil.cloneValue(cell));
         }
     }
 }

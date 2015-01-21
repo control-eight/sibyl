@@ -20,11 +20,14 @@ public class TestItemSetsDao {
         try(HConnection connection = HConnectionManager.createConnection(myConf)) {
             ItemSetsDao itemSetsDao = new ItemSetsDao(connection);
 
-            itemSetsDao.updateCount("1", 1);
+            /*itemSetsDao.updateCount("1", 1);
             itemSetsDao.updateCount("1", "2", 1);
             itemSetsDao.updateCount("2", 1);
             itemSetsDao.updateCount("2", "1", 1);
-            itemSetsDao.updateCount("1-2", 1);
+            itemSetsDao.updateCount("1-2", 1);*/
+
+            System.out.println("1-2:" + itemSetsDao.getCount("1-2"));
+            System.out.println("1:" + itemSetsDao.getCount("1", "2"));
         }
     }
 }
