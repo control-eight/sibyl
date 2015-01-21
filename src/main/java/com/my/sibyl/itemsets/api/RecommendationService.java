@@ -12,18 +12,24 @@ import java.util.function.Function;
 public interface RecommendationService {
 
     /**
+     * TODO check duplicates
+     * TODO check size
      * Add new transaction to recommendation system. Updates sliding window and recommendations
      * @param transactionItems
      */
     public void addTransaction(List<Long> transactionItems);
 
     /**
+     * TODO check duplicates
+     * TODO check size
      * Remove transaction from recommendation system. Updates sliding window and recommendations
      * @param transactionItems
      */
     public void removeTransaction(List<Long> transactionItems);
 
     /**
+     * TODO check duplicates
+     * TODO check size
      * Gets sorted recommended items for itemId
      *
      */

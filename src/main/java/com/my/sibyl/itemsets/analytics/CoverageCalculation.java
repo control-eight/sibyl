@@ -2,9 +2,9 @@ package com.my.sibyl.itemsets.analytics;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.my.sibyl.itemsets.CandidatesGenerator;
-import com.my.sibyl.itemsets.FrequentItemSetsGenerator;
-import com.my.sibyl.itemsets.ItemSetsFilter;
+import com.my.sibyl.itemsets.legacy.CandidatesGenerator;
+import com.my.sibyl.itemsets.legacy.FrequentItemSetsGenerator;
+import com.my.sibyl.itemsets.legacy.ItemSetsFilter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 

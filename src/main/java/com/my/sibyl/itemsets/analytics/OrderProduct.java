@@ -1,6 +1,6 @@
 package com.my.sibyl.itemsets.analytics;
 
-import com.my.sibyl.itemsets.MutableInteger;
+import com.my.sibyl.itemsets.legacy.MutableInteger;
 
 /**
  * @author abykovsky

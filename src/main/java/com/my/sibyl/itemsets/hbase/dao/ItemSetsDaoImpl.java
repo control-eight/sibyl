@@ -1,5 +1,6 @@
 package com.my.sibyl.itemsets.hbase.dao;
 
+import com.my.sibyl.itemsets.dao.ItemSetsDao;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Get;
@@ -19,7 +20,7 @@ import java.util.Map;
  * @author abykovsky
  * @since 1/21/15
  */
-public class ItemSetsDao {
+public class ItemSetsDaoImpl implements ItemSetsDao {
 
     private static final byte[] TABLE_NAME = Bytes.toBytes("item_sets");
     private static final byte[] COUNT_FAM = Bytes.toBytes("C");
@@ -28,11 +29,12 @@ public class ItemSetsDao {
 
     private HConnection connection;
 
-    public ItemSetsDao(final HConnection connection) {
+    public ItemSetsDaoImpl(final HConnection connection) {
         this.connection = connection;
     }
 
-    public void updateCount(String itemSetRowKey, Integer count) throws IOException {
+    @Override
+    public void updateCount(String itemSetRowKey, long count) throws IOException {
         Put p = makeUpdateCountPut(itemSetRowKey, count);
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
@@ -40,13 +42,21 @@ public class ItemSetsDao {
         }
     }
 
-    private Put makeUpdateCountPut(String itemSetRowKey, Integer count) {
+    @Override
+    public long incrementCount(String itemSetRowKey, long count) throws IOException {
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            return itemSets.incrementColumnValue(Bytes.toBytes(itemSetRowKey), COUNT_FAM, COUNT_COL, count);
+        }
+    }
+
+    private Put makeUpdateCountPut(String itemSetRowKey, long count) {
         Put p = new Put(Bytes.toBytes(itemSetRowKey));
         p.add(COUNT_FAM, COUNT_COL, Bytes.toBytes(count));
         return p;
     }
 
-    public void updateAssocCount(String itemSetRowKey, String itemIdColumnName, Integer count) throws IOException {
+    @Override
+    public void updateAssocCount(String itemSetRowKey, String itemIdColumnName, long count) throws IOException {
         Put p = makeUpdateAssocCountPut(itemSetRowKey, itemIdColumnName, count);
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
@@ -54,18 +64,27 @@ public class ItemSetsDao {
         }
     }
 
-    private Put makeUpdateAssocCountPut(String itemSetRowKey, String itemIdColumnName, Integer count) {
+    @Override
+    public long incrementAssocCount(String itemSetRowKey, String itemIdColumnName, long count) throws IOException {
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            return itemSets.incrementColumnValue(Bytes.toBytes(itemSetRowKey), ASSOCIATION_FAM,
+                    Bytes.toBytes(itemIdColumnName), count);
+        }
+    }
+
+    private Put makeUpdateAssocCountPut(String itemSetRowKey, String itemIdColumnName, long count) {
         Put p = new Put(Bytes.toBytes(itemSetRowKey));
         p.add(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName), Bytes.toBytes(count));
         return p;
     }
 
-    public void updateCounts(String itemSetRowKey, Integer count, Map<String, Integer> assocMap) throws IOException, HBaseException {
+    @Override
+    public void updateCounts(String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException {
 
         List<Put> batch = new ArrayList<>();
         batch.add(makeUpdateCountPut(itemSetRowKey, count));
 
-        for (Map.Entry<String, Integer> entry : assocMap.entrySet()) {
+        for (Map.Entry<String, Long> entry : assocMap.entrySet()) {
             batch.add(makeUpdateAssocCountPut(itemSetRowKey, entry.getKey(), entry.getValue()));
         }
 
@@ -80,7 +99,8 @@ public class ItemSetsDao {
         }
     }
 
-    public Integer getCount(String itemSetRowKey) throws IOException {
+    @Override
+    public Long getCount(String itemSetRowKey) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addColumn(COUNT_FAM, COUNT_COL);
 
@@ -88,11 +108,12 @@ public class ItemSetsDao {
             Result result = itemSets.get(g);
             Cell cell = result.getColumnLatestCell(COUNT_FAM, COUNT_COL);
             if(cell == null) return null;
-            return Bytes.toInt(CellUtil.cloneValue(cell));
+            return Bytes.toLong(CellUtil.cloneValue(cell));
         }
     }
 
-    public Integer getCount(String itemSetRowKey, String itemIdColumnName) throws IOException {
+    @Override
+    public Long getCount(String itemSetRowKey, String itemIdColumnName) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addColumn(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
 
@@ -100,7 +121,7 @@ public class ItemSetsDao {
             Result result = itemSets.get(g);
             Cell cell = result.getColumnLatestCell(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
             if(cell == null) return null;
-            return Bytes.toInt(CellUtil.cloneValue(cell));
+            return Bytes.toLong(CellUtil.cloneValue(cell));
         }
     }
 }

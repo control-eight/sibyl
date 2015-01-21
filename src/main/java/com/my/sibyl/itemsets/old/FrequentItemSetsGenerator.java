@@ -1,7 +1,7 @@
 package com.my.sibyl.itemsets.old;
 
-import com.my.sibyl.itemsets.ItemSetsFilter;
-import com.my.sibyl.itemsets.MutableInteger;
+import com.my.sibyl.itemsets.legacy.ItemSetsFilter;
+import com.my.sibyl.itemsets.legacy.MutableInteger;
 
 import java.util.ArrayList;
 import java.util.HashMap;

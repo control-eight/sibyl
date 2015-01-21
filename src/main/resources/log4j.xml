@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration>
+
+    <appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{HH:mm:ss,SSS} %5p *[%t]* (%F:%L) - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="log4jLog" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="file" value="/tmp/sibyl.log"/>
+        <param name="datePattern" value="'.'yyyy-MM-dd"/>
+        <param name="threshold" value="DEBUG"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{HH:mm:ss.SSS} %5p %c{1}.%M:%L - %m%n"/>
+        </layout>
+    </appender>
+
+    <logger name="com.my" additivity="true">
+        <level value="DEBUG"/>
+    </logger>
+
+    <root>
+        <level value="INFO"/>
+        <appender-ref ref="stdout" />
+        <!--<appender-ref ref="log4jLog" />-->
+    </root>
+</log4j:configuration>

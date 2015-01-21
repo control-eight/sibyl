@@ -1,4 +1,4 @@
-package com.my.sibyl.itemsets;
+package com.my.sibyl.itemsets.legacy;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

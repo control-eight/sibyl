@@ -1,4 +1,4 @@
-package com.my.sibyl.itemsets;
+package com.my.sibyl.itemsets.legacy;
 
 import com.google.common.collect.Ordering;
 import org.apache.commons.csv.CSVFormat;
