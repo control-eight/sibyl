@@ -9,21 +9,17 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <hadoop-common.version>2.0.0-cdh4.3.0</hadoop-common.version>
-        <hbase.version>0.94.6-cdh4.3.0</hbase.version>
-
-        <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
-
-        <kiji-schema.version>1.4.0</kiji-schema.version>
-        <kiji-mapreduce.version>1.2.8</kiji-mapreduce.version>
+        <hadoop-common.version>2.5.0-cdh5.3.0</hadoop-common.version>
+        <!--<hbase.version>0.94.6-cdh4.3.0</hbase.version>-->
+        <hbase.version>0.98.6-cdh5.3.0</hbase.version>
     </properties>
 
     <dependencies>
-        <dependency>
+        <!--<dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>18.0</version>
-        </dependency>
+        </dependency> -->
 
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -37,7 +33,7 @@
             <version>1.1</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
             <version>1.7.5</version>
@@ -47,49 +43,34 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
             <version>3.1.1</version>
-        </dependency>
-
-        <!--kiji -->
-        <dependency>
-            <groupId>org.kiji.common</groupId>
-            <artifactId>kiji-common-flags</artifactId>
-            <version>${kiji-common-flags.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.kiji.schema</groupId>
-            <artifactId>kiji-schema</artifactId>
-            <version>${kiji-schema.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.kiji.mapreduce</groupId>
-            <artifactId>kiji-mapreduce</artifactId>
-            <version>${kiji-mapreduce.version}</version>
-            <scope>provided</scope>
-        </dependency>
+        </dependency>-->
 
         <!--hadoop -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop-common.version}</version>
-            <!--<scope>provided</scope>-->
-        </dependency>
+            &lt;!&ndash;<scope>provided</scope>&ndash;&gt;
+        </dependency>-->
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
+            <artifactId>hbase-client</artifactId>
             <version>${hbase.version}</version>
             <!--<scope>provided</scope>-->
         </dependency>
+        <!--<dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>${hbase.version}</version>
+            &lt;!&ndash;<scope>provided</scope>&ndash;&gt;
+        </dependency>-->
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <version>${hadoop-common.version}</version>
-            <!--<scope>provided</scope>-->
-        </dependency>
+            &lt;!&ndash;<scope>provided</scope>&ndash;&gt;
+        </dependency>-->
 
     </dependencies>
 
@@ -140,7 +121,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro-maven-plugin</artifactId>
                 <version>1.7.5</version>
@@ -153,20 +134,14 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
         </plugins>
     </build>
 
     <repositories>
         <repository>
-            <id>kiji-repos</id>
-            <name>kiji-repos</name>
-            <url>https://repo.wibidata.com/artifactory/kiji</url>
-        </repository>
-        <repository>
-            <id>kiji-nightly</id>
-            <name>kiji-nightly</name>
-            <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+            <id>cloudera-repo-releases</id>
+            <url>https://repository.cloudera.com/artifactory/repo/</url>
         </repository>
     </repositories>
 
