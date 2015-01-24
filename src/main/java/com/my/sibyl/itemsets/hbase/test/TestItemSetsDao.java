@@ -11,6 +11,8 @@ import org.apache.hadoop.hbase.exceptions.HBaseException;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author abykovsky
@@ -18,7 +20,7 @@ import java.util.Arrays;
  */
 public class TestItemSetsDao {
 
-    public static void main(String[] args) throws IOException, HBaseException {
+    public static void main(String[] args) throws IOException, HBaseException, InterruptedException {
         Configuration myConf = HBaseConfiguration.create();
 
         try(HConnection connection = HConnectionManager.createConnection(myConf)) {
@@ -44,8 +46,24 @@ public class TestItemSetsDao {
             System.out.println(itemSetsDao.incrementAssocCount("1", "2", 1));*/
 
             //new AssociationServiceImpl(connection).processTransaction(Arrays.asList("1", "2"));
-            new AssociationServiceImpl(connection).processTransaction(Arrays.asList("1", "2", "3"));
+            //new AssociationServiceImpl(connection).processTransaction(Arrays.asList("1", "2", "3"));
             //new AssociationServiceImpl(connection).processTransaction(Arrays.asList("1", "2", "3", "4"));
+
+            //System.out.println(itemSetsDao.getAssociations("1"));
+
+            /*Map<String, Long> map = new HashMap<>();
+            for(int i = 0; i < 10000; i++) {
+                map.put(i + "", (long) i);
+            }
+            itemSetsDao.updateCounts("test", 1, map);
+
+            TestStore s = new TestStore();
+            s.set(itemSetsDao.getAssociations("test"));
+            Thread.sleep(50000000);*/
+
+            //new AssociationServiceImpl(connection).getRecommendations(Arrays.asList("1", "2", "3"), null);
+
+
         }
     }
 }

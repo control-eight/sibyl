@@ -1,11 +1,13 @@
 package com.my.sibyl.itemsets.hbase.dao;
 
 import com.my.sibyl.itemsets.dao.ItemSetsDao;
+import com.my.sibyl.itemsets.score_function.Recommendation;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Increment;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
@@ -13,6 +15,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +25,7 @@ import java.util.Map;
  */
 public class ItemSetsDaoImpl implements ItemSetsDao {
 
-    private static final byte[] TABLE_NAME = Bytes.toBytes("item_sets");
+    public static final byte[] TABLE_NAME = Bytes.toBytes("item_sets");
     private static final byte[] COUNT_FAM = Bytes.toBytes("C");
     private static final byte[] ASSOCIATION_FAM = Bytes.toBytes("A");
     private static final byte[] COUNT_COL = Bytes.toBytes("C");
@@ -79,6 +82,32 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
+    public void incrementItemSetAndAssociations(String itemSetRowKey, long count, Map<String, Long> assocMap)
+            throws IOException, HBaseException {
+        List<Increment> batch = new ArrayList<>();
+        byte[] row = Bytes.toBytes(itemSetRowKey);
+        Increment increment = new Increment(row);
+        increment.addColumn(COUNT_FAM, COUNT_COL, count);
+        batch.add(increment);
+
+        for (Map.Entry<String, Long> entry : assocMap.entrySet()) {
+            increment = new Increment(row);
+            increment.addColumn(ASSOCIATION_FAM, Bytes.toBytes(entry.getKey()), entry.getValue());
+            batch.add(increment);
+        }
+
+        Object[] results = new Object[batch.size()];
+
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            try {
+                itemSets.batch(batch, results);
+            } catch (InterruptedException e) {
+                throw new HBaseException(e);
+            }
+        }
+    }
+
+    @Override
     public void updateCounts(String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException {
 
         List<Put> batch = new ArrayList<>();
@@ -106,9 +135,9 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
             Result result = itemSets.get(g);
-            Cell cell = result.getColumnLatestCell(COUNT_FAM, COUNT_COL);
-            if(cell == null) return null;
-            return Bytes.toLong(CellUtil.cloneValue(cell));
+            byte[] value = result.getValue(COUNT_FAM, COUNT_COL);
+            if(value == null) return null;
+            return Bytes.toLong(value);
         }
     }
 
@@ -119,9 +148,45 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
             Result result = itemSets.get(g);
-            Cell cell = result.getColumnLatestCell(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
-            if(cell == null) return null;
-            return Bytes.toLong(CellUtil.cloneValue(cell));
+            byte[] value = result.getValue(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
+            if(value == null) return null;
+            return Bytes.toLong(value);
         }
+    }
+
+    @Override
+    public void getCountsForAssociations(List<Recommendation> recommendations) throws IOException {
+
+        List<Get> batch = new ArrayList<>();
+
+        for (Recommendation recommendation : recommendations) {
+            Get get = new Get(Bytes.toBytes(recommendation.getAssociationId()));
+            get.addColumn(COUNT_FAM, COUNT_COL);
+        }
+
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            Result[] results = itemSets.get(batch);
+            for (int i = 0; i < recommendations.size(); i++) {
+                byte[] value = results[i].getValue(COUNT_FAM, COUNT_COL);
+                if(value != null) {
+                    recommendations.get(i).setCountOfAssociationAsItemSet(Bytes.toLong(value));
+                }
+            }
+        }
+    }
+
+    @Override
+    public Map<String, Long> getAssociations(String itemSetRowKey) throws IOException {
+        Get g = new Get(Bytes.toBytes(itemSetRowKey));
+        g.addFamily(ASSOCIATION_FAM);
+
+        Map<String, Long> associationMap = new HashMap<>();
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            Result result = itemSets.get(g);
+            for (Map.Entry<byte[], byte[]> entry : result.getFamilyMap(ASSOCIATION_FAM).entrySet()) {
+                associationMap.put(Bytes.toString(entry.getKey()), Bytes.toLong(entry.getValue()));
+            }
+        }
+        return associationMap;
     }
 }

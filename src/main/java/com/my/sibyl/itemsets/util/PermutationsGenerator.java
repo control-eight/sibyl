@@ -1,6 +1,7 @@
 package com.my.sibyl.itemsets.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ public class PermutationsGenerator<T> {
         this.maxCombinationLength = maxCombinationLength;
     }
 
-    public Map<List<T>, Integer> generateItemSetsAndAssociations(List<T> transactionItems, int addAmount) {
+    public Map<Collection<T>, Integer> generateItemSetsAndAssociations(List<T> transactionItems, int addAmount) {
         List<List<T>> itemSets = new ArrayList<>();
         for (T item : transactionItems) {
             List<T> set = new ArrayList<>();
@@ -25,19 +26,19 @@ public class PermutationsGenerator<T> {
             itemSets.add(set);
         }
 
-        Map<List<T>, Integer> generated = new HashMap<>();
+        Map<Collection<T>, Integer> generated = new HashMap<>();
         generateItemSets(itemSets, transactionItems, generated, addAmount);
         return generated;
     }
 
     private void generateItemSets(List<List<T>> itemSets, List<T> transactionItems,
-                                  Map<List<T>, Integer> generated, int addAmount) {
+                                  Map<Collection<T>, Integer> generated, int addAmount) {
         for (int i = 0; i < itemSets.size(); i++) {
             List<T> itemSet = itemSets.get(i);
 
-            generated.put(itemSet, addAmount);
-
             if(itemSet.size() >= maxCombinationLength) continue;
+
+            generated.put(itemSet, addAmount);
 
             List<List<T>> nextLevelItemSets = generateNextLevel(itemSet, transactionItems);
             generateItemSets(nextLevelItemSets, transactionItems, generated, addAmount);
