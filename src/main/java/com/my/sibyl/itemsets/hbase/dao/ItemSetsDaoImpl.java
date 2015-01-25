@@ -2,6 +2,7 @@ package com.my.sibyl.itemsets.hbase.dao;
 
 import com.my.sibyl.itemsets.dao.ItemSetsDao;
 import com.my.sibyl.itemsets.score_function.Recommendation;
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Get;
@@ -26,9 +27,9 @@ import java.util.Map;
 public class ItemSetsDaoImpl implements ItemSetsDao {
 
     public static final byte[] TABLE_NAME = Bytes.toBytes("item_sets");
-    private static final byte[] COUNT_FAM = Bytes.toBytes("C");
-    private static final byte[] ASSOCIATION_FAM = Bytes.toBytes("A");
-    private static final byte[] COUNT_COL = Bytes.toBytes("C");
+    public static final byte[] COUNT_FAM = Bytes.toBytes("C");
+    public static final byte[] ASSOCIATION_FAM = Bytes.toBytes("A");
+    public static final byte[] COUNT_COL = Bytes.toBytes("C");
 
     private HConnection connection;
 
@@ -162,6 +163,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
         for (Recommendation recommendation : recommendations) {
             Get get = new Get(Bytes.toBytes(recommendation.getAssociationId()));
             get.addColumn(COUNT_FAM, COUNT_COL);
+            batch.add(get);
         }
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
@@ -183,6 +185,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
         Map<String, Long> associationMap = new HashMap<>();
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
             Result result = itemSets.get(g);
+            if(result == null) return Collections.emptyMap();
             for (Map.Entry<byte[], byte[]> entry : result.getFamilyMap(ASSOCIATION_FAM).entrySet()) {
                 associationMap.put(Bytes.toString(entry.getKey()), Bytes.toLong(entry.getValue()));
             }

@@ -40,6 +40,29 @@ public class ItemSetAndAssociation<T> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ItemSetAndAssociation that = (ItemSetAndAssociation) o;
+
+        if (associationMap != null ? !associationMap.equals(that.associationMap) : that.associationMap != null)
+            return false;
+        if (count != null ? !count.equals(that.count) : that.count != null) return false;
+        if (itemSet != null ? !itemSet.equals(that.itemSet) : that.itemSet != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = itemSet != null ? itemSet.hashCode() : 0;
+        result = 31 * result + (count != null ? count.hashCode() : 0);
+        result = 31 * result + (associationMap != null ? associationMap.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "ItemSetAndAssociation{" +
                 "itemSet=" + itemSet +

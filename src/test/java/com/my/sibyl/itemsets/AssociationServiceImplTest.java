@@ -8,10 +8,12 @@ import com.my.sibyl.itemsets.score_function.Recommendation;
 import com.my.sibyl.itemsets.score_function.ScoreFunction;
 import com.my.sibyl.itemsets.score_function.ScoreFunctionResult;
 import com.my.sibyl.itemsets.util.CombinationsGenerator;
+import org.apache.hadoop.hbase.exceptions.HBaseException;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,10 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import static org.junit.Assert.assertEquals;
+
+import static com.my.sibyl.itemsets.util.CombinationsGeneratorTest.createItemSetAndAssociation;
+import static org.mockito.Mockito.*;
 
 /**
  * @author abykovsky
@@ -43,6 +45,29 @@ public class AssociationServiceImplTest {
         associationService = new AssociationServiceImpl();
         associationService.setItemSetsDao(mockItemSetsDao);
         associationService.setCombinationsGenerator(mockCombinationsGenerator);
+    }
+
+    @Test
+    public void testProcessTransaction() throws IOException, HBaseException {
+
+        List<ItemSetAndAssociation<String>> collection = new ArrayList<>();
+        collection.add(createItemSetAndAssociation(Arrays.asList("1"), 1l, Arrays.asList("2", "3"), Arrays.asList(1l, 1l)));
+        collection.add(createItemSetAndAssociation(Arrays.asList("2"), 1l, Arrays.asList("1", "3"), Arrays.asList(1l, 1l)));
+        collection.add(createItemSetAndAssociation(Arrays.asList("3"), 1l, Arrays.asList("1", "2"), Arrays.asList(1l, 1l)));
+        collection.add(createItemSetAndAssociation(Arrays.asList("1", "2"), 1l, Arrays.asList("3"), Arrays.asList(1l)));
+        collection.add(createItemSetAndAssociation(Arrays.asList("1", "3"), 1l, Arrays.asList("2"), Arrays.asList(1l)));
+        collection.add(createItemSetAndAssociation(Arrays.asList("2", "3"), 1l, Arrays.asList("1"), Arrays.asList(1l)));
+
+        List<String> transactionItems = Arrays.asList("1", "2", "3");
+
+        when(mockCombinationsGenerator.generateItemSetsAndAssociations(transactionItems, 1)).thenReturn(collection);
+        associationService.processTransaction(transactionItems);
+        verify(mockItemSetsDao).incrementItemSetAndAssociations("1", 1l, collection.get(0).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations("2", 1l, collection.get(1).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations("3", 1l, collection.get(2).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations("1-2", 1l, collection.get(3).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations("1-3", 1l, collection.get(4).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations("2-3", 1l, collection.get(5).getAssociationMap());
     }
 
     @Test
