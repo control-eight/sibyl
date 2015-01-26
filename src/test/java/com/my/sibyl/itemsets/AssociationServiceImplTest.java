@@ -11,12 +11,14 @@ import com.my.sibyl.itemsets.util.CombinationsGenerator;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -118,6 +120,68 @@ public class AssociationServiceImplTest {
         assertEquals("Item id [0]", "1", testResult.get(0).getResult());
         assertEquals("Item id [1]", "2", testResult.get(1).getResult());
         assertEquals("Item id [2]", "3", testResult.get(2).getResult());
+    }
+
+    @Test
+    public void testGetRecommendations_WithLift() throws IOException {
+
+        List<String> basketItems = Arrays.asList("1", "2", "3");
+
+        Collection<Set<String>> itemSets = Arrays.asList(
+                Sets.newHashSet("1"),
+                Sets.newHashSet("2"),
+                Sets.newHashSet("3"),
+                Sets.newHashSet("1-2"),
+                Sets.newHashSet("1-3"),
+                Sets.newHashSet("2-3")
+        );
+
+        when(mockCombinationsGenerator.generateItemSets(basketItems)).thenReturn(itemSets);
+
+        when(mockItemSetsDao.getCount("1")).thenReturn(10l);
+        when(mockItemSetsDao.getCount("2")).thenReturn(5l);
+        when(mockItemSetsDao.getCount("3")).thenReturn(10l);
+        when(mockItemSetsDao.getCount("1-2")).thenReturn(1l);
+        when(mockItemSetsDao.getCount("1-3")).thenReturn(10l);
+        when(mockItemSetsDao.getCount("2-3")).thenReturn(10l);
+
+        mockGetAssociations("1", Arrays.asList("2", "3"), Arrays.asList(1l, 10l));
+        mockGetAssociations("2", Arrays.asList("1", "3"), Arrays.asList(1l, 10l));
+        mockGetAssociations("3", Arrays.asList("2", "3"), Arrays.asList(10l, 10l));
+
+        mockGetAssociations("1-2", Arrays.asList("3"), Arrays.asList(1l));
+        mockGetAssociations("1-3", Arrays.asList("2"), Arrays.asList(4l));
+        mockGetAssociations("2-3", Arrays.asList("1"), Arrays.asList(10l));
+
+
+        Map<String, Long> map = new HashMap<>();
+        map.put("1", 10l); map.put("2", 5l); map.put("3", 10l);
+        Set<String> set = new HashSet<>();
+        set.add("1"); set.add("2"); set.add("3");
+        when(mockItemSetsDao.getCounts(set)).thenReturn(map);
+
+        when(mockItemSetsDao.getCount(AssociationServiceImpl.TRANSACTIONS_COUNT_ROW_KEY)).thenReturn(1l);
+
+        boolean isLiftInUse = true;
+        double confidence = 0.5;
+        int maxResults = 10;
+        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(maxResults,
+                Arrays.asList(new ConfidenceRecommendationFilter() {
+                    @Override
+                    public boolean filter(Double value) {
+                        return value < confidence;
+                    }
+                }), isLiftInUse);
+
+
+        List<ScoreFunctionResult<String, Double>> testResult = associationService.getRecommendations(basketItems, scoreFunction);
+        assertEquals("ScoreFunctionResult size", 3, testResult.size());
+        assertEquals("Item id [0]", "1", testResult.get(0).getResult());
+        assertEquals("Item id [1]", "2", testResult.get(1).getResult());
+        assertEquals("Item id [2]", "3", testResult.get(2).getResult());
+        assertEquals("Lift 1", new Double(0.1 * 1e6 + 10), testResult.get(0).getScore());
+        assertEquals("Lift 2", new Double(0.2 * 1e6 + 10), testResult.get(1).getScore());
+        assertEquals("Lift 3", new Double(0.1 * 1e6 + 10), testResult.get(2).getScore());
     }
 
     private Map<String, Long> mockGetAssociations(String itemSetRowKey, List<String> keys, List<Long> values) throws IOException {

@@ -63,7 +63,7 @@ public class TestItemSetsDao {
 
             //new AssociationServiceImpl(connection).getRecommendations(Arrays.asList("1", "2", "3"), null);
 
-
+            itemSetsDao.incrementCount(" ", 1);
         }
     }
 }

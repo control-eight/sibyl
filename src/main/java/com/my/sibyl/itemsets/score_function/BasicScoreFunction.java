@@ -18,6 +18,7 @@ public class BasicScoreFunction implements ScoreFunction<Recommendation> {
     public BasicScoreFunction(int maxResults, List<RecommendationFilter> recommendationFilters, boolean isLiftInUse) {
         this.maxResults = maxResults;
         this.recommendationFilters = recommendationFilters;
+        this.isLiftInUse = isLiftInUse;
     }
 
     @Override

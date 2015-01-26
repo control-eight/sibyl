@@ -3,6 +3,8 @@ package com.my.sibyl.itemsets.hbase.dao;
 import com.my.sibyl.itemsets.dao.ItemSetsDao;
 import com.my.sibyl.itemsets.score_function.Recommendation;
 import edu.emory.mathcs.backport.java.util.Collections;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Get;
@@ -16,7 +18,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -174,6 +178,32 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
                     recommendations.get(i).setCountOfAssociationAsItemSet(Bytes.toLong(value));
                 }
             }
+        }
+    }
+
+    @Override
+    public Map<String, Long> getCounts(Collection<String> itemSetRowKeys) throws IOException {
+
+        List<Get> batch = new ArrayList<>();
+
+        for (String itemSetRowKey : itemSetRowKeys) {
+            Get get = new Get(Bytes.toBytes(itemSetRowKey));
+            get.addColumn(COUNT_FAM, COUNT_COL);
+            batch.add(get);
+        }
+
+        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+            Result[] results = itemSets.get(batch);
+            Map<String, Long> result = new HashMap<>();
+            for (int i = 0; i < itemSetRowKeys.size(); i++) {
+                byte[] value = results[i].getValue(COUNT_FAM, COUNT_COL);
+                if(value != null) {
+                    result.put(Bytes.toString(results[i].getRow()), Bytes.toLong(value));
+                } else {
+                    result.put(Bytes.toString(results[i].getRow()), null);
+                }
+            }
+            return result;
         }
     }
 

@@ -1,5 +1,6 @@
 package com.my.sibyl.itemsets;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.my.sibyl.itemsets.dao.ItemSetsDao;
 import com.my.sibyl.itemsets.hbase.dao.ItemSetsDaoImpl;
@@ -9,11 +10,13 @@ import com.my.sibyl.itemsets.score_function.RecommendationFilter;
 import com.my.sibyl.itemsets.score_function.ScoreFunction;
 import com.my.sibyl.itemsets.score_function.ScoreFunctionResult;
 import com.my.sibyl.itemsets.util.CombinationsGenerator;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * @author abykovsky
@@ -31,6 +36,7 @@ import java.util.Set;
 public class AssociationServiceImpl {
 
     private static final Log LOG = LogFactory.getLog(AssociationServiceImpl.class);
+    public static final String TRANSACTIONS_COUNT_ROW_KEY = " ";
 
     private int maxItemSetLength = (int) ConfigurationHolder.getConfiguration()
             .getInt("maxItemSetLength");
@@ -65,7 +71,13 @@ public class AssociationServiceImpl {
                 .generateItemSetsAndAssociations(transactionItems, addAmount);
         LOG.debug("Generated itemSets: " + itemSetAndAssociations);
         updateItemSets(itemSetAndAssociations);
+        incrementTransactionsCount();
     }
+
+    private void incrementTransactionsCount() throws IOException {
+        itemSetsDao.incrementCount(TRANSACTIONS_COUNT_ROW_KEY, 1);
+    }
+
 
     private void updateItemSets(Collection<ItemSetAndAssociation<String>> itemSetAndAssociations) throws IOException {
         for (ItemSetAndAssociation<String> itemSetAndAssociation : itemSetAndAssociations) {
@@ -130,10 +142,21 @@ public class AssociationServiceImpl {
     }
 
     private void calculateLift(List<Recommendation> recommendationList) throws IOException {
-        itemSetsDao.getCountsForAssociations(recommendationList);
+        Map<String, Long> assocCounts = itemSetsDao.getCounts(new HashSet<>(Lists.transform(recommendationList,
+                Recommendation::getAssociationId)));
+        recommendationList.forEach(recommendation -> {
+            Long count = assocCounts.get(recommendation.getAssociationId());
+            if(count != null) recommendation.setCountOfAssociationAsItemSet(count);
+        });
+
+        long transactionsCount = itemSetsDao.getCount(TRANSACTIONS_COUNT_ROW_KEY);
         for (Recommendation recommendation : recommendationList) {
-            recommendation.setLift((double) recommendation.getAssociationCount() /
-                    (recommendation.getItemSetCount() * recommendation.getCountOfAssociationAsItemSet()));
+            if(recommendation.getCountOfAssociationAsItemSet() == 0) continue;
+            recommendation.setLift(recommendation.getAssociationCount() /
+                    ((double)recommendation.getItemSetCount()
+                            * recommendation.getCountOfAssociationAsItemSet()/transactionsCount));
+            //divide by transactionCount
+            //empty item-set => transactionCount
         }
     }
 

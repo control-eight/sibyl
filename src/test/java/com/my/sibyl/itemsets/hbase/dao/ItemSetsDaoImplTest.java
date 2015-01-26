@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -204,6 +205,24 @@ public class ItemSetsDaoImplTest {
         assertEquals("Size", 2, getList.size());
         assertEquals("Row key [0]", "4", Bytes.toString(getList.get(0).getRow()));
         assertEquals("Row key [1]", "5", Bytes.toString(getList.get(1).getRow()));
+    }
+
+    @Test
+    public void testGetCounts() throws IOException {
+        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
+
+        when(mockTable.get(any(List.class))).thenReturn(Arrays.asList(mockResult, mockResult).toArray(new Result[2]));
+
+        itemSetsDao.getCounts(Arrays.asList("1", "2"));
+
+        ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
+
+        verify(mockTable).get(list.capture());
+
+        List<Get> getList = list.getValue();
+        assertEquals("Size", 2, getList.size());
+        assertEquals("Row key [0]", "1", Bytes.toString(getList.get(0).getRow()));
+        assertEquals("Row key [1]", "2", Bytes.toString(getList.get(1).getRow()));
     }
 
     @Test
