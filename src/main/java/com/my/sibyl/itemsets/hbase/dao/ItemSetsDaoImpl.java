@@ -42,7 +42,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public void updateCount(String itemSetRowKey, long count) throws IOException {
+    public void updateItemSetCount(String itemSetRowKey, long count) throws IOException {
         Put p = makeUpdateCountPut(itemSetRowKey, count);
 
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
@@ -51,7 +51,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public long incrementCount(String itemSetRowKey, long count) throws IOException {
+    public long incrementItemSetCount(String itemSetRowKey, long count) throws IOException {
         try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
             return itemSets.incrementColumnValue(Bytes.toBytes(itemSetRowKey), COUNT_FAM, COUNT_COL, count);
         }
@@ -113,7 +113,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public void updateCounts(String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException {
+    public void updateItemSetsCount(String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException {
 
         List<Put> batch = new ArrayList<>();
         batch.add(makeUpdateCountPut(itemSetRowKey, count));
@@ -134,7 +134,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public Long getCount(String itemSetRowKey) throws IOException {
+    public Long getItemSetCount(String itemSetRowKey) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addColumn(COUNT_FAM, COUNT_COL);
 
@@ -147,7 +147,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public Long getCount(String itemSetRowKey, String itemIdColumnName) throws IOException {
+    public Long getItemSetCount(String itemSetRowKey, String itemIdColumnName) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addColumn(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
 
@@ -182,7 +182,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public Map<String, Long> getCounts(Collection<String> itemSetRowKeys) throws IOException {
+    public Map<String, Long> getItemSetsCount(Collection<String> itemSetRowKeys) throws IOException {
 
         List<Get> batch = new ArrayList<>();
 

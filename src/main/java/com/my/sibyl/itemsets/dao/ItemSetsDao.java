@@ -14,9 +14,9 @@ import java.util.Map;
  * @since 1/22/15
  */
 public interface ItemSetsDao {
-    void updateCount(String itemSetRowKey, long count) throws IOException;
+    void updateItemSetCount(String itemSetRowKey, long count) throws IOException;
 
-    long incrementCount(String itemSetRowKey, long count) throws IOException;
+    long incrementItemSetCount(String itemSetRowKey, long count) throws IOException;
 
     void updateAssocCount(String itemSetRowKey, String itemIdColumnName, long count) throws IOException;
 
@@ -25,15 +25,15 @@ public interface ItemSetsDao {
     void incrementItemSetAndAssociations(String itemSetRowKey, long count, Map<String, Long> assocMap)
             throws IOException, HBaseException;
 
-    void updateCounts(String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException;
+    void updateItemSetsCount(String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException;
 
-    Long getCount(String itemSetRowKey) throws IOException;
+    Long getItemSetCount(String itemSetRowKey) throws IOException;
 
-    Long getCount(String itemSetRowKey, String itemIdColumnName) throws IOException;
+    Long getItemSetCount(String itemSetRowKey, String itemIdColumnName) throws IOException;
 
     void getCountsForAssociations(List<Recommendation> recommendations) throws IOException;
 
-    Map<String, Long> getCounts(Collection<String> itemSetRowKeys) throws IOException;
+    Map<String, Long> getItemSetsCount(Collection<String> itemSetRowKeys) throws IOException;
 
     Map<String, Long> getAssociations(String itemSetRowKey) throws IOException;
 }

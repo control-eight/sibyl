@@ -16,7 +16,6 @@ import org.mockito.ArgumentCaptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -71,7 +70,7 @@ public class ItemSetsDaoImplTest {
     @Test
     public void testUpdateCount() throws IOException {
         when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
-        itemSetsDao.updateCount("1-2", 5);
+        itemSetsDao.updateItemSetCount("1-2", 5);
         verify(mockTable).put(putCaptor.capture());
 
         Put put = putCaptor.getValue();
@@ -83,7 +82,7 @@ public class ItemSetsDaoImplTest {
     @Test
     public void testIncrementCount() throws IOException {
         when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
-        itemSetsDao.incrementCount("1-2", 5);
+        itemSetsDao.incrementItemSetCount("1-2", 5);
         verify(mockTable).incrementColumnValue(rowCaptor.capture(), cfCaptor.capture(), columnCaptor.capture(), longCaptor.capture());
 
         assertEquals("Row key", "1-2", Bytes.toString(rowCaptor.getValue()));
@@ -140,7 +139,7 @@ public class ItemSetsDaoImplTest {
 
         Map<String, Long> assocMap = new HashMap<>();
         assocMap.put("4", 4l);
-        itemSetsDao.updateCounts("1-2", 5, assocMap);
+        itemSetsDao.updateItemSetsCount("1-2", 5, assocMap);
 
         ArgumentCaptor<List> listPutCaptor = ArgumentCaptor.forClass(List.class);
 
@@ -161,7 +160,7 @@ public class ItemSetsDaoImplTest {
         when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
         when(mockTable.get(any(Get.class))).thenReturn(mockResult);
 
-        itemSetsDao.getCount("1-2");
+        itemSetsDao.getItemSetCount("1-2");
 
         verify(mockTable).get(getCaptor.capture());
 
@@ -173,7 +172,7 @@ public class ItemSetsDaoImplTest {
         when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
         when(mockTable.get(any(Get.class))).thenReturn(mockResult);
 
-        itemSetsDao.getCount("1-2", "3");
+        itemSetsDao.getItemSetCount("1-2", "3");
 
         verify(mockTable).get(getCaptor.capture());
 
@@ -213,7 +212,7 @@ public class ItemSetsDaoImplTest {
 
         when(mockTable.get(any(List.class))).thenReturn(Arrays.asList(mockResult, mockResult).toArray(new Result[2]));
 
-        itemSetsDao.getCounts(Arrays.asList("1", "2"));
+        itemSetsDao.getItemSetsCount(Arrays.asList("1", "2"));
 
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
 

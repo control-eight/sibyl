@@ -27,30 +27,17 @@ public class BasicScoreFunction implements ScoreFunction<Recommendation> {
     }
 
     @Override
-    public void calculateScore(Recommendation recommendation) {
-        recommendation.setScore(recommendation.getLift() * 1e6 + recommendation.getAssociationCount());
+    public List<Recommendation> cut(List<Recommendation> recommendationList) {
+        return recommendationList.subList(0, Math.min(recommendationList.size(), maxResults));
     }
 
     @Override
-    public int compare(Recommendation o1, Recommendation o2) {
-        double result = o1.getScore() - o2.getScore();
-        if(result < 0) return 1;
-        if(result > 0) return -1;
-        return 0;
-    }
-
-    /*@Override
     public int compare(Recommendation o1, Recommendation o2) {
         double result = o1.getLift() - o2.getLift();
         if(result < 0) return 1;
         if(result > 0) return -1;
 
-        return (int) (-1 * (o1.getCount() - o2.getCount()));
-    }*/
-
-    @Override
-    public int getMaxResults() {
-        return maxResults;
+        return (int) (-1 * (o1.getAssociationCount() - o2.getAssociationCount()));
     }
 
     @Override

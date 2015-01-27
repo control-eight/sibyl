@@ -9,17 +9,17 @@ import java.util.Set;
  */
 public class ItemSetAndAssociation<T> {
 
-    private Set<T> itemSet;
+    private String itemSet;
 
     private Long count;
 
     private Map<T, Long> associationMap;
 
-    public Set<T> getItemSet() {
+    public String getItemSet() {
         return itemSet;
     }
 
-    public void setItemSet(Set<T> itemSet) {
+    public void setItemSet(String itemSet) {
         this.itemSet = itemSet;
     }
 

@@ -1,26 +1,30 @@
 package com.my.sibyl.itemsets.score_function;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author abykovsky
  * @since 1/24/15
  */
-public class ScoreFunctionResult<T, S> {
+public class ScoreFunctionResult<T> {
 
-    private T result;
+    private final T result;
 
-    private S score;
+    private final Map<String, Number> measures = new HashMap<>();
 
-    public ScoreFunctionResult(T result, S score) {
+    public ScoreFunctionResult(T result, double confidence, double lift) {
         this.result = result;
-        this.score = score;
+        this.measures.put("confidence", confidence);
+        this.measures.put("lift", lift);
     }
 
     public T getResult() {
         return result;
     }
 
-    public S getScore() {
-        return score;
+    public Map<String, Number> getMeasures() {
+        return measures;
     }
 
     @Override
@@ -44,7 +48,7 @@ public class ScoreFunctionResult<T, S> {
     public String toString() {
         return "ScoreFunctionResult{" +
                 "result=" + result +
-                ", score=" + score +
+                ", measures=" + measures +
                 '}';
     }
 }

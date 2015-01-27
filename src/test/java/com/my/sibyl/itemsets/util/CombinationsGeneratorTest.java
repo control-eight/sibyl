@@ -28,51 +28,42 @@ public class CombinationsGeneratorTest {
     @Test
     public void testGenerateItemSetsAndAssociations2() {
 
-        ItemSetAndAssociation<String> itemSetAndAssociation1 = createItemSetAndAssociation(Arrays.asList("1"), 1l,
-                Arrays.asList("2"), Arrays.asList(1l));
-        ItemSetAndAssociation<String> itemSetAndAssociation2 = createItemSetAndAssociation(Arrays.asList("2"), 1l,
-                Arrays.asList("1"), Arrays.asList(1l));
-        ItemSetAndAssociation<String> itemSetAndAssociation12 = createItemSetAndAssociation(Arrays.asList("1", "2"), 1l,
-                null, null);
+        Set itemSet1 = set(Arrays.asList("1"));
+        Set itemSet2 = set(Arrays.asList("2"));
+        Set itemSet12 = set(Arrays.asList("1", "2"));
 
-        Collection<ItemSetAndAssociation<String>> testResult = combinationsGenerator
-                .generateItemSetsAndAssociations(Arrays.asList("1", "2"), 1);
+        Collection<Set<String>> testResult = combinationsGenerator
+                .generateCombinations(Arrays.asList("1", "2"));
         assertEquals("Size", 3, testResult.size());
-        assertTrue("Contains 1", testResult.contains(itemSetAndAssociation1));
-        assertTrue("Contains 2", testResult.contains(itemSetAndAssociation2));
-        assertTrue("Contains 1-2", testResult.contains(itemSetAndAssociation12));
+        assertTrue("Contains 1", testResult.contains(itemSet1));
+        assertTrue("Contains 2", testResult.contains(itemSet2));
+        assertTrue("Contains 1-2", testResult.contains(itemSet12));
     }
 
     @Test
     public void testGenerateItemSetsAndAssociations3() {
 
-        ItemSetAndAssociation<String> itemSetAndAssociation1 = createItemSetAndAssociation(Arrays.asList("1"), 1l,
-                Arrays.asList("2", "3"), Arrays.asList(1l, 1l));
-        ItemSetAndAssociation<String> itemSetAndAssociation2 = createItemSetAndAssociation(Arrays.asList("2"), 1l,
-                Arrays.asList("1", "3"), Arrays.asList(1l, 1l));
-        ItemSetAndAssociation<String> itemSetAndAssociation3 = createItemSetAndAssociation(Arrays.asList("3"), 1l,
-                Arrays.asList("1", "2"), Arrays.asList(1l, 1l));
-        ItemSetAndAssociation<String> itemSetAndAssociation12 = createItemSetAndAssociation(Arrays.asList("1", "2"), 1l,
-                Arrays.asList("3"), Arrays.asList(1l));
-        ItemSetAndAssociation<String> itemSetAndAssociation13 = createItemSetAndAssociation(Arrays.asList("1", "3"), 1l,
-                Arrays.asList("2"), Arrays.asList(1l));
-        ItemSetAndAssociation<String> itemSetAndAssociation23 = createItemSetAndAssociation(Arrays.asList("2", "3"), 1l,
-                Arrays.asList("1"), Arrays.asList(1l));
+        Set itemSet1 = set(Arrays.asList("1"));
+        Set itemSet2 = set(Arrays.asList("2"));
+        Set itemSet3 = set(Arrays.asList("3"));
+        Set itemSet12 = set(Arrays.asList("1", "2"));
+        Set itemSet13 = set(Arrays.asList("1", "3"));
+        Set itemSet23 = set(Arrays.asList("2", "3"));
 
-        Collection<ItemSetAndAssociation<String>> testResult = combinationsGenerator
-                .generateItemSetsAndAssociations(Arrays.asList("1", "2", "3"), 1);
+        Collection<Set<String>> testResult = combinationsGenerator
+                .generateCombinations(Arrays.asList("1", "2", "3"));
         assertEquals("Size", 6, testResult.size());
-        assertTrue("Contains 1", testResult.contains(itemSetAndAssociation1));
-        assertTrue("Contains 2", testResult.contains(itemSetAndAssociation2));
-        assertTrue("Contains 2", testResult.contains(itemSetAndAssociation3));
-        assertTrue("Contains 1-2", testResult.contains(itemSetAndAssociation12));
-        assertTrue("Contains 1-2", testResult.contains(itemSetAndAssociation13));
-        assertTrue("Contains 1-2", testResult.contains(itemSetAndAssociation23));
+        assertTrue("Contains 1", testResult.contains(itemSet1));
+        assertTrue("Contains 2", testResult.contains(itemSet2));
+        assertTrue("Contains 2", testResult.contains(itemSet3));
+        assertTrue("Contains 1-2", testResult.contains(itemSet12));
+        assertTrue("Contains 1-2", testResult.contains(itemSet13));
+        assertTrue("Contains 1-2", testResult.contains(itemSet23));
     }
 
     @Test
     public void testGenerateItemSets3() {
-        Collection<Set<String>> testResult = combinationsGenerator.generateItemSets(Arrays.asList("1", "2", "3"));
+        Collection<Set<String>> testResult = combinationsGenerator.generateCombinations(Arrays.asList("1", "2", "3"));
         assertEquals("Size", 6, testResult.size());
         assertTrue("Contains 1", testResult.contains(set(Arrays.asList("1"))));
         assertTrue("Contains 2", testResult.contains(set(Arrays.asList("2"))));
@@ -84,7 +75,7 @@ public class CombinationsGeneratorTest {
 
     @Test
     public void testGenerateItemSets4() {
-        Collection<Set<String>> testResult = combinationsGenerator.generateItemSets(Arrays.asList("1", "2", "3", "4"));
+        Collection<Set<String>> testResult = combinationsGenerator.generateCombinations(Arrays.asList("1", "2", "3", "4"));
         assertEquals("Size", 10, testResult.size());
         assertTrue("Contains 1", testResult.contains(set(Arrays.asList("1"))));
         assertTrue("Contains 2", testResult.contains(set(Arrays.asList("2"))));
@@ -110,10 +101,10 @@ public class CombinationsGeneratorTest {
         return result;
     }
 
-    public static ItemSetAndAssociation<String> createItemSetAndAssociation(List<String> list, long count, List<String> list2,
+    public static ItemSetAndAssociation<String> createItemSetAndAssociation(String itemSet, long count, List<String> list2,
                                                              List<Long> list3) {
         ItemSetAndAssociation<String> result = new ItemSetAndAssociation<>();
-        result.setItemSet(set(list));
+        result.setItemSet(itemSet);
         result.setCount(count);
         if(list2 == null || list3 == null) {
             result.setAssociationMap(Collections.emptyMap());

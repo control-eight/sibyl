@@ -11,9 +11,7 @@ public interface ScoreFunction<T> extends Comparator<T> {
 
     List<RecommendationFilter> getRecommendationFilters();
 
-    void calculateScore(T recommendation);
-
-    int getMaxResults();
+    List<Recommendation> cut(List<Recommendation> recommendationList);
 
     boolean isLiftInUse();
 }

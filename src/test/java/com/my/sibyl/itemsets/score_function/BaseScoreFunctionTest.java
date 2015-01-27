@@ -20,7 +20,6 @@ public class BaseScoreFunctionTest {
                 createRecommendation(8.0, 5), createRecommendation(8.0, 10), createRecommendation(10.0, 20));
 
         ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(-1, Collections.emptyList(), true);
-        list.forEach(scoreFunction::calculateScore);
         Collections.sort(list, scoreFunction);
 
         double delta = 1e-10;
