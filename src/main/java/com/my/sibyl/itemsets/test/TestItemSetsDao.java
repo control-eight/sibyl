@@ -1,7 +1,13 @@
-package com.my.sibyl.itemsets.hbase.test;
+package com.my.sibyl.itemsets.test;
 
+import com.my.sibyl.itemsets.AssociationServiceImpl;
+import com.my.sibyl.itemsets.InstancesService;
 import com.my.sibyl.itemsets.dao.ItemSetsDao;
 import com.my.sibyl.itemsets.hbase.dao.ItemSetsDaoImpl;
+import com.my.sibyl.itemsets.score_function.BasicScoreFunction;
+import com.my.sibyl.itemsets.score_function.ConfidenceRecommendationFilter;
+import com.my.sibyl.itemsets.score_function.Recommendation;
+import com.my.sibyl.itemsets.score_function.ScoreFunction;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -9,6 +15,9 @@ import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
 
 import java.io.IOException;
+import java.util.Arrays;
+
+import static com.my.sibyl.itemsets.InstancesService.DEFAULT;
 
 /**
  * @author abykovsky
@@ -57,9 +66,21 @@ public class TestItemSetsDao {
             s.set(itemSetsDao.getAssociations("test"));
             Thread.sleep(50000000);*/
 
-            //new AssociationServiceImpl(connection).getRecommendations(Arrays.asList("1", "2", "3"), null);
+            boolean isLiftInUse = true;
+            double confidence = 0.5;
+            int maxResults = 10;
+            ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(maxResults,
+                    Arrays.asList(new ConfidenceRecommendationFilter() {
+                        @Override
+                        public boolean filter(Double value) {
+                            return value < confidence;
+                        }
+                    }), isLiftInUse);
 
-            itemSetsDao.incrementItemSetCount(" ", 1);
+            System.out.println(new AssociationServiceImpl(connection)
+                    .getRecommendations(InstancesService.DEFAULT, Arrays.asList("1", "2", "3"), scoreFunction));
+
+            //itemSetsDao.incrementItemSetCount(DEFAULT, " ", 1);
         }
     }
 }

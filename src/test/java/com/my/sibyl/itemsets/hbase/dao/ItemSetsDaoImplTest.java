@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.my.sibyl.itemsets.InstancesService.DEFAULT;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -69,8 +70,8 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testUpdateCount() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
-        itemSetsDao.updateItemSetCount("1-2", 5);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
+        itemSetsDao.updateItemSetCount(DEFAULT, "1-2", 5);
         verify(mockTable).put(putCaptor.capture());
 
         Put put = putCaptor.getValue();
@@ -81,8 +82,8 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testIncrementCount() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
-        itemSetsDao.incrementItemSetCount("1-2", 5);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
+        itemSetsDao.incrementItemSetCount(DEFAULT, "1-2", 5);
         verify(mockTable).incrementColumnValue(rowCaptor.capture(), cfCaptor.capture(), columnCaptor.capture(), longCaptor.capture());
 
         assertEquals("Row key", "1-2", Bytes.toString(rowCaptor.getValue()));
@@ -93,8 +94,8 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testUpdateAssocCount() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
-        itemSetsDao.updateAssocCount("1-2", "3", 5);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
+        itemSetsDao.updateAssocCount(DEFAULT, "1-2", "3", 5);
         verify(mockTable).put(putCaptor.capture());
 
         Put put = putCaptor.getValue();
@@ -105,8 +106,8 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testIncrementAssocCount() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
-        itemSetsDao.incrementAssocCount("1-2", "3", 5);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
+        itemSetsDao.incrementAssocCount(DEFAULT, "1-2", "3", 5);
         verify(mockTable).incrementColumnValue(rowCaptor.capture(), cfCaptor.capture(), columnCaptor.capture(), longCaptor.capture());
 
         assertEquals("Row key", "1-2", Bytes.toString(rowCaptor.getValue()));
@@ -117,11 +118,11 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testIncrementItemSetAndAssociations() throws IOException, HBaseException, InterruptedException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
 
         Map<String, Long> assocMap = new HashMap<>();
         assocMap.put("3", 4l);
-        itemSetsDao.incrementItemSetAndAssociations("1-2", 5, assocMap);
+        itemSetsDao.incrementItemSetAndAssociations(DEFAULT, "1-2", 5, assocMap);
 
         ArgumentCaptor<List> listIncrementCaptor = ArgumentCaptor.forClass(List.class);
 
@@ -135,11 +136,11 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testUpdateCounts() throws IOException, HBaseException, InterruptedException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
 
         Map<String, Long> assocMap = new HashMap<>();
         assocMap.put("4", 4l);
-        itemSetsDao.updateItemSetsCount("1-2", 5, assocMap);
+        itemSetsDao.updateItemSetsCount(DEFAULT, "1-2", 5, assocMap);
 
         ArgumentCaptor<List> listPutCaptor = ArgumentCaptor.forClass(List.class);
 
@@ -157,10 +158,10 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testGetCount() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
         when(mockTable.get(any(Get.class))).thenReturn(mockResult);
 
-        itemSetsDao.getItemSetCount("1-2");
+        itemSetsDao.getItemSetCount(DEFAULT, "1-2");
 
         verify(mockTable).get(getCaptor.capture());
 
@@ -169,10 +170,10 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testGetCountAssoc() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
         when(mockTable.get(any(Get.class))).thenReturn(mockResult);
 
-        itemSetsDao.getItemSetCount("1-2", "3");
+        itemSetsDao.getItemSetCount(DEFAULT, "1-2", "3");
 
         verify(mockTable).get(getCaptor.capture());
 
@@ -181,7 +182,7 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testGetCountsForAssociations() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
 
         List<Recommendation> recommendationList = new ArrayList<>();
         Recommendation recommendation = new Recommendation();
@@ -194,7 +195,7 @@ public class ItemSetsDaoImplTest {
 
         when(mockTable.get(any(List.class))).thenReturn(Arrays.asList(mockResult, mockResult).toArray(new Result[2]));
 
-        itemSetsDao.getCountsForAssociations(recommendationList);
+        itemSetsDao.getCountsForAssociations(DEFAULT, recommendationList);
 
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
 
@@ -208,11 +209,11 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testGetCounts() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
 
         when(mockTable.get(any(List.class))).thenReturn(Arrays.asList(mockResult, mockResult).toArray(new Result[2]));
 
-        itemSetsDao.getItemSetsCount(Arrays.asList("1", "2"));
+        itemSetsDao.getItemSetsCount(DEFAULT, Arrays.asList("1", "2"));
 
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
 
@@ -226,12 +227,12 @@ public class ItemSetsDaoImplTest {
 
     @Test
     public void testGetAssociations() throws IOException {
-        when(mockConnection.getTable(TABLE_NAME)).thenReturn(mockTable);
+        when(mockConnection.getTable(TABLE_NAME + "_" + DEFAULT)).thenReturn(mockTable);
 
         when(mockTable.get(any(Get.class))).thenReturn(mockResult);
         when(mockResult.getFamilyMap(ASSOCIATION_FAM)).thenReturn(Collections.emptyNavigableMap());
 
-        itemSetsDao.getAssociations("1-2");
+        itemSetsDao.getAssociations(DEFAULT, "1-2");
 
         verify(mockTable).get(getCaptor.capture());
 

@@ -14,26 +14,26 @@ import java.util.Map;
  * @since 1/22/15
  */
 public interface ItemSetsDao {
-    void updateItemSetCount(String itemSetRowKey, long count) throws IOException;
+    void updateItemSetCount(String instanceName, String itemSetRowKey, long count) throws IOException;
 
-    long incrementItemSetCount(String itemSetRowKey, long count) throws IOException;
+    long incrementItemSetCount(String instanceName, String itemSetRowKey, long count) throws IOException;
 
-    void updateAssocCount(String itemSetRowKey, String itemIdColumnName, long count) throws IOException;
+    void updateAssocCount(String instanceName, String itemSetRowKey, String itemIdColumnName, long count) throws IOException;
 
-    long incrementAssocCount(String itemSetRowKey, String itemIdColumnName, long count) throws IOException;
+    long incrementAssocCount(String instanceName, String itemSetRowKey, String itemIdColumnName, long count) throws IOException;
 
-    void incrementItemSetAndAssociations(String itemSetRowKey, long count, Map<String, Long> assocMap)
+    void incrementItemSetAndAssociations(String instanceName, String itemSetRowKey, long count, Map<String, Long> assocMap)
             throws IOException, HBaseException;
 
-    void updateItemSetsCount(String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException;
+    void updateItemSetsCount(String instanceName, String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException;
 
-    Long getItemSetCount(String itemSetRowKey) throws IOException;
+    Long getItemSetCount(String instanceName, String itemSetRowKey) throws IOException;
 
-    Long getItemSetCount(String itemSetRowKey, String itemIdColumnName) throws IOException;
+    Long getItemSetCount(String instanceName, String itemSetRowKey, String itemIdColumnName) throws IOException;
 
-    void getCountsForAssociations(List<Recommendation> recommendations) throws IOException;
+    void getCountsForAssociations(String instanceName, List<Recommendation> recommendations) throws IOException;
 
-    Map<String, Long> getItemSetsCount(Collection<String> itemSetRowKeys) throws IOException;
+    Map<String, Long> getItemSetsCount(String instanceName, Collection<String> itemSetRowKeys) throws IOException;
 
-    Map<String, Long> getAssociations(String itemSetRowKey) throws IOException;
+    Map<String, Long> getAssociations(String instanceName, String itemSetRowKey) throws IOException;
 }

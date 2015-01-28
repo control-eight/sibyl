@@ -13,9 +13,9 @@ import java.util.List;
  */
 public interface AssociationService {
 
-    void addTransaction(List<String> transactionItems) throws IOException;
+    void addTransaction(String instanceName, List<String> transactionItems) throws IOException;
 
-    List<ScoreFunctionResult<String>> getRecommendations(List<String> basketItems,
+    List<ScoreFunctionResult<String>> getRecommendations(String instanceName, List<String> basketItems,
                                                                  ScoreFunction<Recommendation> scoreFunction)
             throws IOException;
 }

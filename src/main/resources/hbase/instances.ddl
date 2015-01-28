@@ -1,0 +1,13 @@
+create 'instances', {
+    NAME => 'I',
+    BLOOMFILTER => 'NONE',
+    VERSIONS => '5',
+    IN_MEMORY => 'false',
+    KEEP_DELETED_CELLS => 'true',
+    DATA_BLOCK_ENCODING => 'NONE',
+    TTL => '2147483647',
+    COMPRESSION => 'NONE',
+    MIN_VERSIONS => '0',
+    BLOCKCACHE => 'true',
+    BLOCKSIZE => '65536',
+    REPLICATION_SCOPE => '0'}

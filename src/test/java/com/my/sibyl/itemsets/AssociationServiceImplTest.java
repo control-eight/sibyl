@@ -25,6 +25,8 @@ import static org.junit.Assert.assertEquals;
 import static com.my.sibyl.itemsets.util.CombinationsGeneratorTest.createItemSetAndAssociation;
 import static org.mockito.Mockito.*;
 
+import static com.my.sibyl.itemsets.InstancesService.*;
+
 /**
  * @author abykovsky
  * @since 1/25/15
@@ -60,13 +62,13 @@ public class AssociationServiceImplTest {
         List<String> transactionItems = Arrays.asList("1", "2", "3");
 
         when(mockItemSetsGenerator.generateItemSetsAndAssociations(transactionItems, 1)).thenReturn(collection);
-        associationService.addTransaction(transactionItems);
-        verify(mockItemSetsDao).incrementItemSetAndAssociations("1", 1l, collection.get(0).getAssociationMap());
-        verify(mockItemSetsDao).incrementItemSetAndAssociations("2", 1l, collection.get(1).getAssociationMap());
-        verify(mockItemSetsDao).incrementItemSetAndAssociations("3", 1l, collection.get(2).getAssociationMap());
-        verify(mockItemSetsDao).incrementItemSetAndAssociations("1-2", 1l, collection.get(3).getAssociationMap());
-        verify(mockItemSetsDao).incrementItemSetAndAssociations("1-3", 1l, collection.get(4).getAssociationMap());
-        verify(mockItemSetsDao).incrementItemSetAndAssociations("2-3", 1l, collection.get(5).getAssociationMap());
+        associationService.addTransaction(DEFAULT, transactionItems);
+        verify(mockItemSetsDao).incrementItemSetAndAssociations(DEFAULT, "1", 1l, collection.get(0).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations(DEFAULT, "2", 1l, collection.get(1).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations(DEFAULT, "3", 1l, collection.get(2).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations(DEFAULT, "1-2", 1l, collection.get(3).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations(DEFAULT, "1-3", 1l, collection.get(4).getAssociationMap());
+        verify(mockItemSetsDao).incrementItemSetAndAssociations(DEFAULT, "2-3", 1l, collection.get(5).getAssociationMap());
     }
 
     @Test
@@ -78,12 +80,12 @@ public class AssociationServiceImplTest {
 
         when(mockItemSetsGenerator.generateCombinations(basketItems)).thenReturn(itemSets);
 
-        when(mockItemSetsDao.getItemSetCount("1")).thenReturn(10l);
-        when(mockItemSetsDao.getItemSetCount("2")).thenReturn(5l);
-        when(mockItemSetsDao.getItemSetCount("3")).thenReturn(10l);
-        when(mockItemSetsDao.getItemSetCount("1-2")).thenReturn(1l);
-        when(mockItemSetsDao.getItemSetCount("1-3")).thenReturn(10l);
-        when(mockItemSetsDao.getItemSetCount("2-3")).thenReturn(10l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "1")).thenReturn(10l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "2")).thenReturn(5l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "3")).thenReturn(10l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "1-2")).thenReturn(1l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "1-3")).thenReturn(10l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "2-3")).thenReturn(10l);
 
         mockGetAssociations("1", Arrays.asList("2", "3"), Arrays.asList(1l, 10l));
         mockGetAssociations("2", Arrays.asList("1", "3"), Arrays.asList(1l, 10l));
@@ -105,7 +107,8 @@ public class AssociationServiceImplTest {
         }), isLiftInUse);
 
 
-        List<ScoreFunctionResult<String>> testResult = associationService.getRecommendations(basketItems, scoreFunction);
+        List<ScoreFunctionResult<String>> testResult = associationService.getRecommendations(InstancesService.DEFAULT,
+                basketItems, scoreFunction);
         assertEquals("ScoreFunctionResult size", 3, testResult.size());
         assertEquals("Item id [0]", "1", testResult.get(0).getResult());
         assertEquals("Item id [1]", "2", testResult.get(1).getResult());
@@ -121,12 +124,12 @@ public class AssociationServiceImplTest {
 
         when(mockItemSetsGenerator.generateCombinations(basketItems)).thenReturn(itemSets);
 
-        when(mockItemSetsDao.getItemSetCount("1")).thenReturn(10l);
-        when(mockItemSetsDao.getItemSetCount("2")).thenReturn(5l);
-        when(mockItemSetsDao.getItemSetCount("3")).thenReturn(10l);
-        when(mockItemSetsDao.getItemSetCount("1-2")).thenReturn(1l);
-        when(mockItemSetsDao.getItemSetCount("1-3")).thenReturn(10l);
-        when(mockItemSetsDao.getItemSetCount("2-3")).thenReturn(10l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "1")).thenReturn(10l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "2")).thenReturn(5l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "3")).thenReturn(10l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "1-2")).thenReturn(1l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "1-3")).thenReturn(10l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, "2-3")).thenReturn(10l);
 
         mockGetAssociations("1", Arrays.asList("2", "3"), Arrays.asList(1l, 10l));
         mockGetAssociations("2", Arrays.asList("1", "3"), Arrays.asList(1l, 10l));
@@ -140,9 +143,9 @@ public class AssociationServiceImplTest {
         map.put("1", 10l); map.put("2", 5l); map.put("3", 10l);
         Set<String> set = new HashSet<>();
         set.add("1"); set.add("2"); set.add("3");
-        when(mockItemSetsDao.getItemSetsCount(set)).thenReturn(map);
+        when(mockItemSetsDao.getItemSetsCount(DEFAULT, set)).thenReturn(map);
 
-        when(mockItemSetsDao.getItemSetCount(AssociationServiceImpl.TRANSACTIONS_COUNT_ROW_KEY)).thenReturn(1l);
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, AssociationServiceImpl.TRANSACTIONS_COUNT_ROW_KEY)).thenReturn(1l);
 
         boolean isLiftInUse = true;
         double confidence = 0.5;
@@ -156,7 +159,8 @@ public class AssociationServiceImplTest {
                 }), isLiftInUse);
 
 
-        List<ScoreFunctionResult<String>> testResult = associationService.getRecommendations(basketItems, scoreFunction);
+        List<ScoreFunctionResult<String>> testResult = associationService.getRecommendations(InstancesService.DEFAULT,
+                basketItems, scoreFunction);
         assertEquals("ScoreFunctionResult size", 3, testResult.size());
         assertEquals("Item id [0]", "1", testResult.get(0).getResult());
         assertEquals("Item id [1]", "2", testResult.get(1).getResult());
@@ -171,7 +175,7 @@ public class AssociationServiceImplTest {
         for (int i = 0; i < keys.size(); i++) {
             map.put(keys.get(i), values.get(i));
         }
-        when(mockItemSetsDao.getAssociations(itemSetRowKey)).thenReturn(map);
+        when(mockItemSetsDao.getAssociations(DEFAULT, itemSetRowKey)).thenReturn(map);
         return map;
     }
 }
