@@ -53,32 +53,33 @@ public class AssociationServiceImpl implements AssociationService {
         this.itemSetsDao = itemSetsDao;
     }
 
-    public void setItemSetsGenerator(ItemSetsGenerator ItemSetsGenerator) {
+    public void setItemSetsGenerator(ItemSetsGenerator itemSetsGenerator) {
         this.itemSetsGenerator = itemSetsGenerator;
     }
 
     @Override
-    public void addTransaction(List<String> transactionItems) throws IOException {
-        createItemSets(transactionItems);
+    public void addTransaction(String instanceName, List<String> transactionItems) throws IOException {
+        createItemSets(instanceName, transactionItems);
     }
 
-    private void createItemSets(List<String> transactionItems) throws IOException {
+    private void createItemSets(String instanceName, List<String> transactionItems) throws IOException {
         Collection<ItemSetAndAssociation<String>> itemSetAndAssociations = itemSetsGenerator
                 .generateItemSetsAndAssociations(transactionItems, 1);
         LOG.debug("Generated itemSets: " + itemSetAndAssociations);
-        updateItemSets(itemSetAndAssociations);
-        incrementTransactionsCount();
+        updateItemSets(instanceName, itemSetAndAssociations);
+        incrementTransactionsCount(instanceName);
     }
 
-    private void incrementTransactionsCount() throws IOException {
-        itemSetsDao.incrementItemSetCount(TRANSACTIONS_COUNT_ROW_KEY, 1);
+    private void incrementTransactionsCount(String instanceName) throws IOException {
+        itemSetsDao.incrementItemSetCount(instanceName, TRANSACTIONS_COUNT_ROW_KEY, 1);
     }
 
 
-    private void updateItemSets(Collection<ItemSetAndAssociation<String>> itemSetAndAssociations) throws IOException {
+    private void updateItemSets(String instanceName, Collection<ItemSetAndAssociation<String>> itemSetAndAssociations)
+            throws IOException {
         for (ItemSetAndAssociation<String> itemSetAndAssociation : itemSetAndAssociations) {
             try {
-                itemSetsDao.incrementItemSetAndAssociations(itemSetAndAssociation.getItemSet(),
+                itemSetsDao.incrementItemSetAndAssociations(instanceName, itemSetAndAssociation.getItemSet(),
                         itemSetAndAssociation.getCount(), itemSetAndAssociation.getAssociationMap());
             } catch (HBaseException e) {
                 LOG.error(e, e);
@@ -87,24 +88,24 @@ public class AssociationServiceImpl implements AssociationService {
     }
 
     @Override
-    public List<ScoreFunctionResult<String>> getRecommendations(List<String> basketItems,
+    public List<ScoreFunctionResult<String>> getRecommendations(String instanceName, List<String> basketItems,
                                                                         ScoreFunction<Recommendation> scoreFunction)
             throws IOException {
         List<String> itemSets = itemSetsGenerator.generateCombinations(basketItems);
 
         //get basic recommendations - itemsets, associations, frequency
-        List<Recommendation> recommendationList = createBasicRecommendations(itemSets);
+        List<Recommendation> recommendationList = createBasicRecommendations(instanceName, itemSets);
         //filter phase
         filterPhase(scoreFunction, recommendationList);
         //calculate different measures like lift
-        calculateMeasures(scoreFunction, recommendationList);
+        calculateMeasures(instanceName, scoreFunction, recommendationList);
         //sort
         Collections.sort(recommendationList, scoreFunction);
         //subtract using max results
         recommendationList = scoreFunction.cut(recommendationList);
         //if there any results with equal association id we need to filter them and choose only with the greatest score
         recommendationList = filterDuplicates(recommendationList);
-
+        //create score function results with measures
         List<ScoreFunctionResult<String>> result = Lists.transform(recommendationList,
                 input -> new ScoreFunctionResult<>(input.getAssociationId(), input.getConfidence(),
                         input.getLift()));
@@ -116,22 +117,23 @@ public class AssociationServiceImpl implements AssociationService {
         return new ArrayList<>(new HashSet<>(recommendationList));
     }
 
-    private void calculateMeasures(ScoreFunction<Recommendation> scoreFunction, List<Recommendation> recommendationList)
+    private void calculateMeasures(String instanceName, ScoreFunction<Recommendation> scoreFunction,
+                                   List<Recommendation> recommendationList)
             throws IOException {
         if(scoreFunction.isLiftInUse()) {
-            calculateLift(recommendationList);
+            calculateLift(instanceName, recommendationList);
         }
     }
 
-    private void calculateLift(List<Recommendation> recommendationList) throws IOException {
-        Map<String, Long> assocCounts = itemSetsDao.getItemSetsCount(new HashSet<>(Lists.transform(recommendationList,
-                Recommendation::getAssociationId)));
+    private void calculateLift(String instanceName, List<Recommendation> recommendationList) throws IOException {
+        Map<String, Long> assocCounts = itemSetsDao.getItemSetsCount(instanceName,
+                new HashSet<>(Lists.transform(recommendationList, Recommendation::getAssociationId)));
         recommendationList.forEach(recommendation -> {
             Long count = assocCounts.get(recommendation.getAssociationId());
             if(count != null) recommendation.setCountOfAssociationAsItemSet(count);
         });
 
-        long transactionsCount = itemSetsDao.getItemSetCount(TRANSACTIONS_COUNT_ROW_KEY);
+        long transactionsCount = itemSetsDao.getItemSetCount(instanceName, TRANSACTIONS_COUNT_ROW_KEY);
         for (Recommendation recommendation : recommendationList) {
             if(recommendation.getCountOfAssociationAsItemSet() == 0) continue;
             recommendation.setLift(recommendation.getAssociationCount() /
@@ -162,12 +164,12 @@ public class AssociationServiceImpl implements AssociationService {
         }
     }
 
-    private List<Recommendation> createBasicRecommendations(List<String> itemSets) throws IOException {
+    private List<Recommendation> createBasicRecommendations(String instanceName, List<String> itemSets) throws IOException {
         List<Recommendation> recommendationList = new ArrayList<>();
         for (String itemSet : itemSets) {
-            long itemSetCount = itemSetsDao.getItemSetCount(itemSet);
+            long itemSetCount = itemSetsDao.getItemSetCount(instanceName, itemSet);
 
-            Map<String, Long> associations = itemSetsDao.getAssociations(itemSet);
+            Map<String, Long> associations = itemSetsDao.getAssociations(instanceName, itemSet);
             for (Map.Entry<String, Long> entry : associations.entrySet()) {
                 Recommendation recommendation = new Recommendation();
                 recommendation.setItemSet(itemSet);

@@ -1,4 +1,4 @@
-package com.my.sibyl.itemsets.hbase.test;
+package com.my.sibyl.itemsets.test;
 
 import java.util.Map;
 

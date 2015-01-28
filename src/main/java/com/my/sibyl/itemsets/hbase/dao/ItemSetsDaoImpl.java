@@ -30,7 +30,8 @@ import java.util.Map;
  */
 public class ItemSetsDaoImpl implements ItemSetsDao {
 
-    public static final byte[] TABLE_NAME = Bytes.toBytes("item_sets");
+    public static final String TABLE_NAME = "item_sets";
+    //public static final byte[] TABLE_NAME = Bytes.toBytes("item_sets");
     public static final byte[] COUNT_FAM = Bytes.toBytes("C");
     public static final byte[] ASSOCIATION_FAM = Bytes.toBytes("A");
     public static final byte[] COUNT_COL = Bytes.toBytes("C");
@@ -42,17 +43,21 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public void updateItemSetCount(String itemSetRowKey, long count) throws IOException {
+    public void updateItemSetCount(String instanceName, String itemSetRowKey, long count) throws IOException {
         Put p = makeUpdateCountPut(itemSetRowKey, count);
 
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             itemSets.put(p);
         }
     }
 
+    private String getTableName(String instanceName) {
+        return TABLE_NAME + "_" + instanceName;
+    }
+
     @Override
-    public long incrementItemSetCount(String itemSetRowKey, long count) throws IOException {
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+    public long incrementItemSetCount(String instanceName, String itemSetRowKey, long count) throws IOException {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             return itemSets.incrementColumnValue(Bytes.toBytes(itemSetRowKey), COUNT_FAM, COUNT_COL, count);
         }
     }
@@ -64,17 +69,17 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public void updateAssocCount(String itemSetRowKey, String itemIdColumnName, long count) throws IOException {
+    public void updateAssocCount(String instanceName, String itemSetRowKey, String itemIdColumnName, long count) throws IOException {
         Put p = makeUpdateAssocCountPut(itemSetRowKey, itemIdColumnName, count);
 
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             itemSets.put(p);
         }
     }
 
     @Override
-    public long incrementAssocCount(String itemSetRowKey, String itemIdColumnName, long count) throws IOException {
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+    public long incrementAssocCount(String instanceName, String itemSetRowKey, String itemIdColumnName, long count) throws IOException {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             return itemSets.incrementColumnValue(Bytes.toBytes(itemSetRowKey), ASSOCIATION_FAM,
                     Bytes.toBytes(itemIdColumnName), count);
         }
@@ -87,7 +92,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public void incrementItemSetAndAssociations(String itemSetRowKey, long count, Map<String, Long> assocMap)
+    public void incrementItemSetAndAssociations(String instanceName, String itemSetRowKey, long count, Map<String, Long> assocMap)
             throws IOException, HBaseException {
         List<Increment> batch = new ArrayList<>();
         byte[] row = Bytes.toBytes(itemSetRowKey);
@@ -103,7 +108,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
 
         Object[] results = new Object[batch.size()];
 
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             try {
                 itemSets.batch(batch, results);
             } catch (InterruptedException e) {
@@ -113,7 +118,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public void updateItemSetsCount(String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException {
+    public void updateItemSetsCount(String instanceName, String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException {
 
         List<Put> batch = new ArrayList<>();
         batch.add(makeUpdateCountPut(itemSetRowKey, count));
@@ -124,7 +129,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
 
         Object[] results = new Object[batch.size()];
 
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             try {
                 itemSets.batch(batch, results);
             } catch (InterruptedException e) {
@@ -134,11 +139,11 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public Long getItemSetCount(String itemSetRowKey) throws IOException {
+    public Long getItemSetCount(String instanceName, String itemSetRowKey) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addColumn(COUNT_FAM, COUNT_COL);
 
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             Result result = itemSets.get(g);
             byte[] value = result.getValue(COUNT_FAM, COUNT_COL);
             if(value == null) return null;
@@ -147,11 +152,11 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public Long getItemSetCount(String itemSetRowKey, String itemIdColumnName) throws IOException {
+    public Long getItemSetCount(String instanceName, String itemSetRowKey, String itemIdColumnName) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addColumn(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
 
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             Result result = itemSets.get(g);
             byte[] value = result.getValue(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
             if(value == null) return null;
@@ -160,7 +165,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public void getCountsForAssociations(List<Recommendation> recommendations) throws IOException {
+    public void getCountsForAssociations(String instanceName, List<Recommendation> recommendations) throws IOException {
 
         List<Get> batch = new ArrayList<>();
 
@@ -170,7 +175,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
             batch.add(get);
         }
 
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             Result[] results = itemSets.get(batch);
             for (int i = 0; i < recommendations.size(); i++) {
                 byte[] value = results[i].getValue(COUNT_FAM, COUNT_COL);
@@ -182,7 +187,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public Map<String, Long> getItemSetsCount(Collection<String> itemSetRowKeys) throws IOException {
+    public Map<String, Long> getItemSetsCount(String instanceName, Collection<String> itemSetRowKeys) throws IOException {
 
         List<Get> batch = new ArrayList<>();
 
@@ -192,7 +197,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
             batch.add(get);
         }
 
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             Result[] results = itemSets.get(batch);
             Map<String, Long> result = new HashMap<>();
             for (int i = 0; i < itemSetRowKeys.size(); i++) {
@@ -208,12 +213,12 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public Map<String, Long> getAssociations(String itemSetRowKey) throws IOException {
+    public Map<String, Long> getAssociations(String instanceName, String itemSetRowKey) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addFamily(ASSOCIATION_FAM);
 
         Map<String, Long> associationMap = new HashMap<>();
-        try(HTableInterface itemSets = connection.getTable(TABLE_NAME)) {
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             Result result = itemSets.get(g);
             if(result == null) return Collections.emptyMap();
             for (Map.Entry<byte[], byte[]> entry : result.getFamilyMap(ASSOCIATION_FAM).entrySet()) {

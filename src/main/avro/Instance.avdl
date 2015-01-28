@@ -1,0 +1,11 @@
+@namespace("com.my.sibyl.itemsets.model")
+protocol ItemSets {
+
+  record Instance {
+    string name;
+    array<string> measures = [];
+    array<string> dataLoadFiles = [];
+    long slidingWindowSize;
+  }
+
+}
