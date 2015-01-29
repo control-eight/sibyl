@@ -34,6 +34,12 @@
         </dependency>
 
         <dependency>
+            <groupId>net.sf.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>2.3</version>
+        </dependency>
+
+        <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>1.10</version>
@@ -52,15 +58,21 @@
         </dependency>
 
         <!--hadoop -->
-        <!--<dependency>
+        <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop-common.version}</version>
-            &lt;!&ndash;<scope>provided</scope>&ndash;&gt;
-        </dependency>-->
+            <!--<scope>provided</scope>-->
+        </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-client</artifactId>
+            <version>${hbase.version}</version>
+            <!--<scope>provided</scope>-->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
             <version>${hbase.version}</version>
             <!--<scope>provided</scope>-->
         </dependency>
@@ -84,13 +96,6 @@
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.7.2.201409121644</version>
         </dependency>
-
-        <!--<dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-server</artifactId>
-            <version>${hbase.version}</version>
-            &lt;!&ndash;<scope>provided</scope>&ndash;&gt;
-        </dependency>-->
 
         <!--<dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -195,7 +200,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.25</minimum>
+                                            <minimum>0.1</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -211,6 +216,22 @@
                         <exclude>**/PermutationsGenerator.class</exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <descriptor>src/main/assembly/hadoop-assembly.xml</descriptor>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

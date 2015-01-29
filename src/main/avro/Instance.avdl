@@ -8,4 +8,9 @@ protocol ItemSets {
     long slidingWindowSize;
   }
 
+  record Transaction {
+    string id;
+    array<string> items = [];
+    array<int> quantities = [];
+  }
 }
