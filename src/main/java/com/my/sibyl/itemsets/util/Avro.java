@@ -58,11 +58,11 @@ public final class Avro {
         }
     }
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         byte[] bytes = instanceToBytes(new Instance("bla", Collections.emptyList(), Collections.emptyList(), 10l));
         System.out.println(bytes);
         System.out.println(bytesToInstance(bytes));
-    }
+    }*/
 
     public static byte[] transactionToBytes(Transaction transaction) {
         try {

@@ -27,13 +27,19 @@ public interface ItemSetsDao {
 
     void updateItemSetsCount(String instanceName, String itemSetRowKey, long count, Map<String, Long> assocMap) throws IOException, HBaseException;
 
-    Long getItemSetCount(String instanceName, String itemSetRowKey) throws IOException;
+    long getItemSetCount(String instanceName, String itemSetRowKey) throws IOException;
 
-    Long getItemSetCount(String instanceName, String itemSetRowKey, String itemIdColumnName) throws IOException;
+    long getItemSetCount(String instanceName, String itemSetRowKey, String itemIdColumnName) throws IOException;
 
     void getCountsForAssociations(String instanceName, List<Recommendation> recommendations) throws IOException;
 
     Map<String, Long> getItemSetsCount(String instanceName, Collection<String> itemSetRowKeys) throws IOException;
 
     Map<String, Long> getAssociations(String instanceName, String itemSetRowKey) throws IOException;
+
+    void createTable(String instanceName) throws HBaseException, IOException;
+
+    void deleteTable(String name) throws HBaseException, IOException;
+
+    Map<String, Long> getItemSetWithCountMore(String instanceName, long count) throws IOException;
 }

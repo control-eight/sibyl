@@ -1,5 +1,6 @@
 package com.my.sibyl.itemsets.hbase.dao;
 
+import com.my.sibyl.itemsets.InstancesService;
 import com.my.sibyl.itemsets.dao.ItemSetsDao;
 import com.my.sibyl.itemsets.score_function.Recommendation;
 import edu.emory.mathcs.backport.java.util.Collections;
@@ -7,12 +8,18 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.MasterNotRunningException;
+import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Increment;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -23,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 
 /**
  * @author abykovsky
@@ -51,7 +59,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
         }
     }
 
-    private String getTableName(String instanceName) {
+    public static String getTableName(String instanceName) {
         return TABLE_NAME + "_" + instanceName;
     }
 
@@ -139,27 +147,27 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
-    public Long getItemSetCount(String instanceName, String itemSetRowKey) throws IOException {
+    public long getItemSetCount(String instanceName, String itemSetRowKey) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addColumn(COUNT_FAM, COUNT_COL);
 
         try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             Result result = itemSets.get(g);
             byte[] value = result.getValue(COUNT_FAM, COUNT_COL);
-            if(value == null) return null;
+            if(value == null) return 0;
             return Bytes.toLong(value);
         }
     }
 
     @Override
-    public Long getItemSetCount(String instanceName, String itemSetRowKey, String itemIdColumnName) throws IOException {
+    public long getItemSetCount(String instanceName, String itemSetRowKey, String itemIdColumnName) throws IOException {
         Get g = new Get(Bytes.toBytes(itemSetRowKey));
         g.addColumn(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
 
         try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             Result result = itemSets.get(g);
             byte[] value = result.getValue(ASSOCIATION_FAM, Bytes.toBytes(itemIdColumnName));
-            if(value == null) return null;
+            if(value == null) return 0;
             return Bytes.toLong(value);
         }
     }
@@ -205,7 +213,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
                 if(value != null) {
                     result.put(Bytes.toString(results[i].getRow()), Bytes.toLong(value));
                 } else {
-                    result.put(Bytes.toString(results[i].getRow()), null);
+                    result.put(Bytes.toString(results[i].getRow()), 0l);
                 }
             }
             return result;
@@ -221,10 +229,66 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
         try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
             Result result = itemSets.get(g);
             if(result == null) return Collections.emptyMap();
-            for (Map.Entry<byte[], byte[]> entry : result.getFamilyMap(ASSOCIATION_FAM).entrySet()) {
+            NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(ASSOCIATION_FAM);
+            if(familyMap == null) return Collections.emptyMap();
+            for (Map.Entry<byte[], byte[]> entry : familyMap.entrySet()) {
                 associationMap.put(Bytes.toString(entry.getKey()), Bytes.toLong(entry.getValue()));
             }
         }
         return associationMap;
+    }
+
+    @Override
+    public void createTable(String instanceName) throws HBaseException, IOException {
+        try {
+            HBaseAdmin hBaseAdmin = new HBaseAdmin(connection);
+
+            HTableDescriptor defaultItemSetsDescriptor;
+            try(HTableInterface itemSets = connection.getTable(getTableName(InstancesService.DEFAULT))) {
+                defaultItemSetsDescriptor = itemSets.getTableDescriptor();
+            }
+
+            defaultItemSetsDescriptor.setName(Bytes.toBytes(getTableName(instanceName)));
+            HTableDescriptor instanceItemSetsDescriptor = new HTableDescriptor(defaultItemSetsDescriptor);
+            hBaseAdmin.createTable(instanceItemSetsDescriptor);
+
+        } catch (MasterNotRunningException | ZooKeeperConnectionException e) {
+            throw new HBaseException(e);
+        }
+    }
+
+    @Override
+    public void deleteTable(String name) throws HBaseException, IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Map<String, Long> getItemSetWithCountMore(String instanceName, long count) throws IOException {
+
+        Scan scan = new Scan();
+        scan.addColumn(COUNT_FAM, COUNT_COL);
+
+        try(HTableInterface transactions = connection.getTable(getTableName(instanceName))) {
+            ResultScanner resultScanner = transactions.getScanner(scan);
+
+            Result[] results = resultScanner.next(1000);
+            int i = 0;
+            Map<String, Long> resultMap = new HashMap<>();
+            while (results != null && results.length != 0) {
+                for (Result result : results) {
+                    long value = Bytes.toLong(result.getValue(COUNT_FAM, COUNT_COL));
+                    if (value > count) {
+                        resultMap.put(Bytes.toString(result.getRow()), value);
+                    }
+                }
+                results = resultScanner.next(1000);
+                if(i % 100000 == 0) {
+                    System.out.println(i);
+                    System.out.println(resultMap);
+                }
+                i += results.length;
+            }
+            return resultMap;
+        }
     }
 }

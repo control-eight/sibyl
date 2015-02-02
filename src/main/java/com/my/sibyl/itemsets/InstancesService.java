@@ -10,7 +10,9 @@ public interface InstancesService {
 
     public static final String DEFAULT = "default";
 
-    void put(Instance instance);
+    void createInstance(Instance instance);
 
-    Instance get(String name);
+    void deleteInstance(String name);
+
+    Instance getInstance(String name);
 }

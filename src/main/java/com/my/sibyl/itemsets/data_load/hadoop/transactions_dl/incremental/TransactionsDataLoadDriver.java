@@ -1,4 +1,4 @@
-package com.my.sibyl.itemsets.data_load.hadoop.incremental;
+package com.my.sibyl.itemsets.data_load.hadoop.transactions_dl.incremental;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;

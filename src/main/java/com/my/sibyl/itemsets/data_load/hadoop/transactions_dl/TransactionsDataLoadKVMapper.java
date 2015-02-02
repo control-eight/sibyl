@@ -1,4 +1,4 @@
-package com.my.sibyl.itemsets.data_load.hadoop;
+package com.my.sibyl.itemsets.data_load.hadoop.transactions_dl;
 
 import au.com.bytecode.opencsv.CSVParser;
 import com.my.sibyl.itemsets.hbase.dao.TransactionsDaoImpl;
@@ -86,14 +86,14 @@ public class TransactionsDataLoadKVMapper extends
 
         Transaction transaction;
         try {
-            transaction = createTransaction(fields);
+            transaction = createTransaction(fields, orderDate);
         } catch (NumberFormatException e) {
             context.getCounter("TransactionsDataLoadKVMapper", "INVALID_NUMBER").increment(1);
             return;
         }
 
         // Key: e.g. ":"
-        hKey.set(String.format("%s:%s", orderDate.getTime(), transaction.getId()).getBytes());
+        hKey.set(TransactionsDaoImpl.createRowKey(transaction));
 
         if (!transaction.getItems().isEmpty()) {
             Put put = new Put(hKey.get());
@@ -104,11 +104,12 @@ public class TransactionsDataLoadKVMapper extends
         context.getCounter("TransactionsDataLoadKVMapper", "NUM_MSGS").increment(1);
     }
 
-    private Transaction createTransaction(String fields[]) {
+    private Transaction createTransaction(String fields[], Date orderDate) {
         Transaction transaction = new Transaction();
         transaction.setId(fields[0]);
         transaction.setItems(createItems(fields[2]));
         transaction.setQuantities(createQuantities(fields[5]));
+        transaction.setCreateTimestamp(orderDate.getTime());
         return transaction;
     }
 
@@ -120,8 +121,8 @@ public class TransactionsDataLoadKVMapper extends
         return result;
     }
 
-    private List<CharSequence> createItems(String field) {
-        List<CharSequence> result = new ArrayList<>();
+    private List<String> createItems(String field) {
+        List<String> result = new ArrayList<>();
         for (String item : field.split("\\|")) {
             if(!item.trim().isEmpty()) result.add(item);
         }

@@ -12,5 +12,7 @@ public interface InstancesDao {
 
     void put(Instance instance) throws IOException;
 
+    void delete(String name) throws IOException;
+
     Instance get(String name) throws IOException;
 }

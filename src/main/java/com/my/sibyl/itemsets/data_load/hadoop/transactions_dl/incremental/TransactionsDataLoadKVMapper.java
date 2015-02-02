@@ -1,4 +1,4 @@
-package com.my.sibyl.itemsets.data_load.hadoop.incremental;
+package com.my.sibyl.itemsets.data_load.hadoop.transactions_dl.incremental;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -126,8 +126,8 @@ public class TransactionsDataLoadKVMapper extends
         return result;
     }
 
-    private List<CharSequence> createItems(String field) {
-        List<CharSequence> result = new ArrayList<>();
+    private List<String> createItems(String field) {
+        List<String> result = new ArrayList<>();
         for (String item : field.split("\\|")) {
             if(!item.trim().isEmpty()) result.add(item);
         }

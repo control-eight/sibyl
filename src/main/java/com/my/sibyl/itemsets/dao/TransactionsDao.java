@@ -12,4 +12,6 @@ import java.util.List;
  */
 public interface TransactionsDao {
     List<Transaction> scanTransactions(Date startRow, Date stopRow) throws IOException;
+
+    void addTransaction(Transaction transaction) throws IOException;
 }

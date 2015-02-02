@@ -36,7 +36,6 @@ public class AssociationServiceImpl implements AssociationService {
     private int maxItemSetLength = (int) ConfigurationHolder.getConfiguration()
             .getInt("maxItemSetLength");
 
-    //private PermutationsGenerator<String> permutationsGenerator = new PermutationsGenerator<>(maxItemSetLength);
     private ItemSetsGenerator itemSetsGenerator = new ItemSetsGenerator(maxItemSetLength);
 
     private ItemSetsDao itemSetsDao;
@@ -101,10 +100,10 @@ public class AssociationServiceImpl implements AssociationService {
         calculateMeasures(instanceName, scoreFunction, recommendationList);
         //sort
         Collections.sort(recommendationList, scoreFunction);
-        //subtract using max results
-        recommendationList = scoreFunction.cut(recommendationList);
         //if there any results with equal association id we need to filter them and choose only with the greatest score
         recommendationList = filterDuplicates(recommendationList);
+        //subtract using max results
+        recommendationList = scoreFunction.cut(recommendationList);
         //create score function results with measures
         List<ScoreFunctionResult<String>> result = Lists.transform(recommendationList,
                 input -> new ScoreFunctionResult<>(input.getAssociationId(), input.getConfidence(),
@@ -114,7 +113,13 @@ public class AssociationServiceImpl implements AssociationService {
     }
 
     private List<Recommendation> filterDuplicates(List<Recommendation> recommendationList) {
-        return new ArrayList<>(new HashSet<>(recommendationList));
+        Set<Recommendation> helpSet = new HashSet<>();
+        for(Iterator<Recommendation> iter = recommendationList.iterator(); iter.hasNext();) {
+            if(!helpSet.add(iter.next())) {
+                iter.remove();
+            }
+        }
+        return recommendationList;
     }
 
     private void calculateMeasures(String instanceName, ScoreFunction<Recommendation> scoreFunction,
@@ -168,6 +173,8 @@ public class AssociationServiceImpl implements AssociationService {
         List<Recommendation> recommendationList = new ArrayList<>();
         for (String itemSet : itemSets) {
             long itemSetCount = itemSetsDao.getItemSetCount(instanceName, itemSet);
+
+            if(itemSetCount == 0) continue;
 
             Map<String, Long> associations = itemSetsDao.getAssociations(instanceName, itemSet);
             for (Map.Entry<String, Long> entry : associations.entrySet()) {

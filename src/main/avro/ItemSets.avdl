@@ -5,6 +5,8 @@ protocol ItemSets {
     string name;
     array<string> measures = [];
     array<string> dataLoadFiles = [];
+    long startLoadDate;
+    long endLoadDate;
     long slidingWindowSize;
   }
 
@@ -12,5 +14,6 @@ protocol ItemSets {
     string id;
     array<string> items = [];
     array<int> quantities = [];
+    long createTimestamp;
   }
 }

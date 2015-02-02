@@ -4,6 +4,7 @@ import com.my.sibyl.itemsets.dao.InstancesDao;
 
 import com.my.sibyl.itemsets.model.Instance;
 import com.my.sibyl.itemsets.util.Avro;
+import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -35,6 +36,15 @@ public class InstancesDaoImpl implements InstancesDao {
         p.add(INFO_FAM, CONFIGURATION_COLUMN, Avro.instanceToBytes(instance));
         try(HTableInterface instances = connection.getTable(TABLE_NAME)) {
             instances.put(p);
+        }
+    }
+
+    @Override
+    public void delete(String name) throws IOException {
+        Delete d = new Delete(Avro.charSequenceTyBytes(name));
+        d.deleteColumn(INFO_FAM, CONFIGURATION_COLUMN);
+        try(HTableInterface instances = connection.getTable(TABLE_NAME)) {
+            instances.delete(d);
         }
     }
 

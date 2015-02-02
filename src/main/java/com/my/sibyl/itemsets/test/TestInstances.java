@@ -3,6 +3,7 @@ package com.my.sibyl.itemsets.test;
 import com.my.sibyl.itemsets.InstancesService;
 import com.my.sibyl.itemsets.InstancesServiceImpl;
 import com.my.sibyl.itemsets.model.Instance;
+import com.my.sibyl.itemsets.model.Measure;
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -10,8 +11,6 @@ import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author abykovsky
@@ -26,7 +25,7 @@ public class TestInstances {
             InstancesService instancesService = new InstancesServiceImpl(connection);
 
             //addDefaultInstance(instancesService);
-            System.out.println(instancesService.get("default"));
+            System.out.println(instancesService.getInstance("default"));
         }
     }
 
@@ -34,12 +33,8 @@ public class TestInstances {
         Instance defaultInstance = new Instance();
         defaultInstance.setName("default");
         defaultInstance.setDataLoadFiles(Collections.emptyList());
-        List<CharSequence> measures = new ArrayList<>();
-        measures.add("support");
-        measures.add("confidence");
-        measures.add("lift");
-        defaultInstance.setMeasures(measures);
+        defaultInstance.setMeasures(Measure.stringValues());
         defaultInstance.setSlidingWindowSize(0l);
-        instancesService.put(defaultInstance);
+        instancesService.createInstance(defaultInstance);
     }
 }
