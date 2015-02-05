@@ -13,6 +13,7 @@ import java.util.List;
  */
 public interface AssociationService {
 
+    //TODO change to using Transaction with all fields
     void addTransaction(String instanceName, List<String> transactionItems) throws IOException;
 
     List<ScoreFunctionResult<String>> getRecommendations(String instanceName, List<String> basketItems,

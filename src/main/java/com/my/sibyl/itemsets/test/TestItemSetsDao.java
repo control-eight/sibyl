@@ -1,6 +1,5 @@
 package com.my.sibyl.itemsets.test;
 
-import com.my.sibyl.itemsets.AssociationService;
 import com.my.sibyl.itemsets.AssociationServiceImpl;
 import com.my.sibyl.itemsets.InstancesService;
 import com.my.sibyl.itemsets.InstancesServiceImpl;
@@ -76,7 +75,11 @@ public class TestItemSetsDao {
             s.set(itemSetsDao.getAssociations("test"));
             Thread.sleep(50000000);*/
 
-            getRecommendations(connection);
+            /*for (int i = 0; i < 10; i++) {
+                long start = System.currentTimeMillis();
+                getRecommendations(connection);
+                System.out.println((System.currentTimeMillis() - start) + "ms");
+            }*/
 
             //itemSetsDao.incrementItemSetCount(InstancesService.DEFAULT, AssociationServiceImpl.TRANSACTIONS_COUNT_ROW_KEY, 1694868)
 
@@ -91,7 +94,7 @@ public class TestItemSetsDao {
 
             //createInstance(connection);
 
-            //System.out.println(new InstancesServiceImpl(connection).getInstance(InstancesService.DEFAULT));
+            System.out.println(new InstancesServiceImpl(connection).getInstance(InstancesService.DEFAULT));
 
             //1694868
             //scanTransactions(connection, "2013-10-16", "2013-11-16");
@@ -156,7 +159,7 @@ public class TestItemSetsDao {
 
     private static void getRecommendations(HConnection connection) throws IOException {
         boolean isLiftInUse = true;
-        double confidence = 0.0;
+        double confidence = 0.0005;
         int maxResults = 10;
         ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(maxResults,
                 Arrays.asList(new ConfidenceRecommendationFilter() {
@@ -167,7 +170,7 @@ public class TestItemSetsDao {
                 }), isLiftInUse);
 
         System.out.println(new AssociationServiceImpl(connection)
-                .getRecommendations(InstancesService.DEFAULT, makeBasketItems3(), scoreFunction));
+                .getRecommendations(InstancesService.DEFAULT, makeBasketItems2(), scoreFunction));
     }
 
     private static List<String> makeBasketItems() {

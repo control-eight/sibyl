@@ -1,0 +1,40 @@
+{
+
+    // Java verticle
+    "main":"com.my.sibyl.itemsets.rest.SibylVerticle",
+
+    // In this example we also provide various other versions of the main verticle, you can uncomment this and
+    // play around:
+
+    // Java *source* verticle
+    //"main":"JavaSourcePingVerticle.java",
+
+    // Compiled Groovy verticle - note that they must be prefixed with 'groovy:' to distinguish them from compiled Java verticles
+    //"main":"groovy:com.mycompany.myproject.GroovyPingVerticle",
+
+    // Groovy *script* verticle
+    //"main": "GroovyVerticle.groovy",
+
+    // Ruby verticle
+    //"main":"ping_verticle.rb",
+
+    // JavaScript verticle
+    //"main": "ping_verticle.js",
+
+    // Python verticle
+    //"main": "ping_verticle.py",
+
+
+    // If your module is going to be registered in the Vert.x module registry you will also need the following
+    // mandatory fields
+    "description":"Sibyl Association Rules Real time recommendations",
+    "licenses": ["The Apache Software License Version 2.0"],
+    "author": "Alexander Bykovsky",
+
+    // Optional fields
+    "developers": ["Alexander Bykovsky"],
+    "keywords": ["sibyl", "item sets", "association rules", "real time", "recommendations"],
+    "homepage": "https://github.com/control-eight/sibyl",
+
+    "auto-redeploy": true
+}

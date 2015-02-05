@@ -94,10 +94,12 @@ public class AssociationServiceImpl implements AssociationService {
 
         //get basic recommendations - itemsets, associations, frequency
         List<Recommendation> recommendationList = createBasicRecommendations(instanceName, itemSets);
-        //filter phase
+        //filter phase, should be only one logic filter
         filterPhase(scoreFunction, recommendationList);
-        //calculate different measures like lift
+        //calculate different measures like lift, e.g. metrics
         calculateMeasures(instanceName, scoreFunction, recommendationList);
+        //TODO should be only one logic filter
+        //postCalculationMeasuresFilterPhase(scoreFunction, recommendationList);
         //sort
         Collections.sort(recommendationList, scoreFunction);
         //if there any results with equal association id we need to filter them and choose only with the greatest score
@@ -131,6 +133,7 @@ public class AssociationServiceImpl implements AssociationService {
     }
 
     private void calculateLift(String instanceName, List<Recommendation> recommendationList) throws IOException {
+        //TODO important place for performance
         Map<String, Long> assocCounts = itemSetsDao.getItemSetsCount(instanceName,
                 new HashSet<>(Lists.transform(recommendationList, Recommendation::getAssociationId)));
         recommendationList.forEach(recommendation -> {

@@ -110,9 +110,9 @@ public class AssociationServiceImplTest {
         List<ScoreFunctionResult<String>> testResult = associationService.getRecommendations(InstancesService.DEFAULT,
                 basketItems, scoreFunction);
         assertEquals("ScoreFunctionResult size", 3, testResult.size());
-        assertEquals("Item id [0]", "1", testResult.get(0).getResult());
+        assertEquals("Item id [0]", "3", testResult.get(0).getResult());
         assertEquals("Item id [1]", "2", testResult.get(1).getResult());
-        assertEquals("Item id [2]", "3", testResult.get(2).getResult());
+        assertEquals("Item id [2]", "1", testResult.get(2).getResult());
     }
 
     @Test
@@ -162,12 +162,12 @@ public class AssociationServiceImplTest {
         List<ScoreFunctionResult<String>> testResult = associationService.getRecommendations(InstancesService.DEFAULT,
                 basketItems, scoreFunction);
         assertEquals("ScoreFunctionResult size", 3, testResult.size());
-        assertEquals("Item id [0]", "1", testResult.get(0).getResult());
+        assertEquals("Item id [0]", "3", testResult.get(0).getResult());
         assertEquals("Item id [1]", "2", testResult.get(1).getResult());
-        assertEquals("Item id [2]", "3", testResult.get(2).getResult());
-        assertEquals("Lift 1", 0.1, testResult.get(0).getMeasures().get("lift"));
+        assertEquals("Item id [2]", "1", testResult.get(2).getResult());
+        assertEquals("Lift 3", 0.2, testResult.get(0).getMeasures().get("lift"));
         assertEquals("Lift 2", 0.2, testResult.get(1).getMeasures().get("lift"));
-        assertEquals("Lift 3", 0.2, testResult.get(2).getMeasures().get("lift"));
+        assertEquals("Lift 1", 0.1, testResult.get(2).getMeasures().get("lift"));
     }
 
     private Map<String, Long> mockGetAssociations(String itemSetRowKey, List<String> keys, List<Long> values) throws IOException {
