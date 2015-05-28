@@ -284,7 +284,11 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
                 results = resultScanner.next(1000);
                 if(i % 100000 == 0) {
                     System.out.println(i);
-                    System.out.println(resultMap);
+                }
+                if(i % 1500000 == 0) {
+                    for (String s : resultMap.keySet()) {
+                        System.out.println(s);
+                    }
                 }
                 i += results.length;
             }

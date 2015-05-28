@@ -1,5 +1,6 @@
 package com.my.sibyl.itemsets.score_function;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,7 +8,7 @@ import java.util.Map;
  * @author abykovsky
  * @since 1/24/15
  */
-public class ScoreFunctionResult<T> {
+public class ScoreFunctionResult<T> implements Serializable {
 
     private final T result;
 

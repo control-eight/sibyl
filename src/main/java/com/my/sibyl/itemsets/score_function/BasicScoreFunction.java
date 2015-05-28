@@ -33,6 +33,10 @@ public class BasicScoreFunction implements ScoreFunction<Recommendation> {
 
     @Override
     public int compare(Recommendation o1, Recommendation o2) {
+        /*double result = o1.getConfidence() - o2.getConfidence();
+        if(result < 0) return 1;
+        if(result > 0) return -1;*/
+
         double result = o1.getLift() - o2.getLift();
         if(result < 0) return 1;
         if(result > 0) return -1;
@@ -43,5 +47,14 @@ public class BasicScoreFunction implements ScoreFunction<Recommendation> {
     @Override
     public boolean isLiftInUse() {
         return isLiftInUse;
+    }
+
+    @Override
+    public String toString() {
+        return "BasicScoreFunction{" +
+                "maxResults=" + maxResults +
+                ", recommendationFilters=" + recommendationFilters +
+                ", isLiftInUse=" + isLiftInUse +
+                '}';
     }
 }
