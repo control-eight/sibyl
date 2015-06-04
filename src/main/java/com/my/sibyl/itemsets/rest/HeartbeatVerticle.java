@@ -78,28 +78,9 @@ public class HeartbeatVerticle extends Verticle {
         cluster.putIfAbsent("instanceId", 0l);
 
         long timerID = vertx.setPeriodic(DELAY, timerID1 -> {
-            //getVertx().sharedData().getSet("instances").clear();
-            //LOG.info("Publish heartbeat");
             vertx.eventBus().publish("heartbeat", "heartbeatReply " + version.incrementAndGet());
         });
         LOG.info("Timer with id " + timerID + " is started.");
-
-            /*vertx.eventBus().registerHandler("heartbeatReply", new Handler<Message<String>>() {
-                @Override
-                public void handle(Message<String> message) {
-                    LOG.info("Message: \"" + message.body() + "\" from " + message.address());
-                    Pattern pattern = Pattern.compile("Id: (\\d+)");
-                    Matcher matcher = pattern.matcher(message.body());
-                    if(matcher.find()) {
-                        String id = matcher.group(1);
-                        LOG.info("Income Id: " + id);
-
-                        //instancesMap.putIfAbsent(Long.parseLong(id), 0l);
-                        //instancesMap.putIfAbsent()
-                    }
-                }
-            });*/
-
 
         if(routeMatcher == null) {
             routeMatcher = new RouteMatcher();
@@ -116,11 +97,11 @@ public class HeartbeatVerticle extends Verticle {
         HazelcastInstance hz = getHazelcastInstance();
         ConcurrentMap<Long, byte[]> instances = hz.getMap("instances"); // shared distributed map
 
-        //ConcurrentSharedMap<Long, byte[]> instances = getVertx().sharedData().<Long, byte[]>getMap("instances");
         instances.forEach((key, value) -> {
             clusterInfo.add(new JsonObject(new String(value, StandardCharsets.US_ASCII)));
         });
 
+        //TODO too many operation, it could be simlified
         List<JsonObject> inactiveList = new ArrayList<>();
         clusterInfo.stream().filter(jsonObject -> version.get() - jsonObject.getLong("version") > VERSION_DIFF)
                 .forEach(inactiveList::add);
@@ -159,48 +140,19 @@ public class HeartbeatVerticle extends Verticle {
             @Override
             public void handle(final Message<String> message) {
                 final String messageBody = message.body();
-                //LOG.info("Reply on heartbeat to: " + messageBody);
 
                 if (instanceId == null) {
                     ConcurrentMap<String, Long> cluster = getHazelcastInstance().getMap("cluster");
                     instanceId = new AtomicLong(cluster.compute("instanceId", (key, value) -> value + 1));
-                    //LOG.info("Assigned id is: " + instanceId);
                 }
-                //vertx.eventBus().send(messageBody.split(" ")[0], "I'm working! Id: " + instanceId);
-
                 ConcurrentMap<Long, byte[]> instances = getHazelcastInstance().getMap("instances"); // shared distributed map
 
-                //ConcurrentSharedMap<Long, byte[]> instances = getVertx().sharedData().<Long, byte[]>getMap("instances");
                 if (!instances.containsKey(instanceId.get())) {
-                    JsonObject instanceInformation = new JsonObject();
-                    instanceInformation.putNumber("id", instanceId.get());
-                    instanceInformation.putString("host", host);
-                    instanceInformation.putNumber("version", Long.parseLong(messageBody.split(" ")[1]));
-                    instanceInformation.putString("lastUpdate", formatter.format(new Date()));
-                    byte[] data = instanceInformation.encode().getBytes(StandardCharsets.US_ASCII);
-                    instances.putIfAbsent(instanceId.get(), data);
+                    JsonObject jsonObject = initInstanceInformation(messageBody, host);
+                    instances.putIfAbsent(instanceId.get(), jsonObject.encode().getBytes(StandardCharsets.US_ASCII));
                 } else {
-                    byte[] value = instances.get(instanceId.get());
-                    JsonObject jsonObject = new JsonObject(new String(value, StandardCharsets.US_ASCII));
-                    jsonObject.putNumber("version", Long.parseLong(messageBody.split(" ")[1]));
-                    jsonObject.putString("lastUpdate", new SimpleDateFormat(YYYY_MM_DD_HH_MM_SS).format(new Date()));
+                    JsonObject jsonObject = updateInstanceInformation(messageBody, instances);
                     instances.put(instanceId.get(), jsonObject.encode().getBytes(StandardCharsets.US_ASCII));
-
-                    /*instances.compute(instanceId.get(), (key, value) -> {
-                        //System.out.println(new String(value, StandardCharsets.US_ASCII));
-                        JsonObject jsonObject = new JsonObject(new String(value, StandardCharsets.US_ASCII));
-                        jsonObject.putNumber("version", Long.parseLong(messageBody.split(" ")[1]));
-                        jsonObject.putString("lastUpdate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-                        return jsonObject.encode().getBytes(StandardCharsets.US_ASCII);
-                    });*/
-
-                    /*final List<JsonObject> clusterInfo = new ArrayList<>();
-
-                    getVertx().sharedData().<Long, byte[]>getMap("instances").forEach((key, value1) -> {
-                        clusterInfo.add(new JsonObject(new String(value1, StandardCharsets.US_ASCII)));
-                    });
-
-                    System.out.println("Cluster info: " + clusterInfo);*/
                 }
             }
         }, new AsyncResultHandler<Void>() {
@@ -208,6 +160,23 @@ public class HeartbeatVerticle extends Verticle {
                 System.out.println("The handler has been registered across the cluster ok? " + asyncResult.succeeded());
             }
         });
+    }
+
+    private JsonObject initInstanceInformation(String messageBody, String host) {
+        JsonObject instanceInformation = new JsonObject();
+        instanceInformation.putNumber("id", instanceId.get());
+        instanceInformation.putString("host", host);
+        instanceInformation.putNumber("version", Long.parseLong(messageBody.split(" ")[1]));
+        instanceInformation.putString("lastUpdate", formatter.format(new Date()));
+        return instanceInformation;
+    }
+
+    private JsonObject updateInstanceInformation(String messageBody, ConcurrentMap<Long, byte[]> instances) {
+        byte[] value = instances.get(instanceId.get());
+        JsonObject jsonObject = new JsonObject(new String(value, StandardCharsets.US_ASCII));
+        jsonObject.putNumber("version", Long.parseLong(messageBody.split(" ")[1]));
+        jsonObject.putString("lastUpdate", new SimpleDateFormat(YYYY_MM_DD_HH_MM_SS).format(new Date()));
+        return jsonObject;
     }
 
     private HazelcastInstance getHazelcastInstance() {
