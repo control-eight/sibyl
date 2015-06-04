@@ -6,6 +6,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
 
+import java.util.Iterator;
+
 /**
  * @author abykovsky
  * @since 1/21/15
@@ -13,6 +15,8 @@ import org.apache.commons.configuration.SystemConfiguration;
 public class ConfigurationHolder {
 
     private static final String PROPERTIES_NAME = "application.properties";
+
+    private static final String ENV_PROPERTIES = "SIBYL_ENV_PROPERTIES";
 
     public static Configuration getConfiguration() {
         return ConfigurationHolderBuilder.configuration;
@@ -25,11 +29,33 @@ public class ConfigurationHolder {
         static {
             CompositeConfiguration config = new CompositeConfiguration();
             config.addConfiguration(new SystemConfiguration());
+
+            if(System.getenv(ENV_PROPERTIES) != null || System.getProperty(ENV_PROPERTIES) != null) {
+                String envProperties = System.getenv(ENV_PROPERTIES);
+                if(envProperties == null) {
+                    envProperties = System.getProperty(ENV_PROPERTIES);
+                }
+                try {
+                    config.addConfiguration(new PropertiesConfiguration(envProperties));
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException("Exception during build properties", e);
+                }
+            }
+
             try {
                 config.addConfiguration(new PropertiesConfiguration(PROPERTIES_NAME));
             } catch (ConfigurationException e) {
                 throw new RuntimeException("Exception during build properties", e);
             }
+
+            for(Iterator<String> iter = config.getKeys(); iter.hasNext();) {
+                String key = iter.next();
+                if(System.getProperty(key) == null) {
+                    Object property = config.getProperty(key);
+                    System.setProperty(key, (property != null? property.toString(): null));
+                }
+            }
+
             configuration = config;
         }
     }

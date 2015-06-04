@@ -66,6 +66,7 @@ public class Recommendation {
         this.countOfAssociationAsItemSet = countOfAssociationAsItemSet;
     }
 
+    //TODO precision
     public double getSupport() {
         return support;
     }
@@ -74,6 +75,7 @@ public class Recommendation {
         this.support = support;
     }
 
+    //TODO precision
     public double getConfidence() {
         return confidence;
     }
@@ -82,6 +84,7 @@ public class Recommendation {
         this.confidence = confidence;
     }
 
+    //TODO overflow issue!!!
     public double getLift() {
         return lift;
     }

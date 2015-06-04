@@ -14,6 +14,15 @@ public class TransactionBinding {
 
     private long createTimestamp;
 
+    public TransactionBinding() {
+    }
+
+    public TransactionBinding(String id, List<String> items, long createTimestamp) {
+        this.id = id;
+        this.items = items;
+        this.createTimestamp = createTimestamp;
+    }
+
     public String getId() {
         return id;
     }

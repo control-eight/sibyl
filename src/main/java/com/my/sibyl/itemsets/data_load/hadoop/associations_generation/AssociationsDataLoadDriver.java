@@ -1,6 +1,7 @@
 package com.my.sibyl.itemsets.data_load.hadoop.associations_generation;
 
 import com.my.sibyl.itemsets.AssociationServiceImpl;
+import com.my.sibyl.itemsets.ConfigurationHolder;
 import com.my.sibyl.itemsets.InstancesService;
 import com.my.sibyl.itemsets.hbase.dao.InstancesDaoImpl;
 import com.my.sibyl.itemsets.hbase.dao.ItemSetsDaoImpl;
@@ -24,6 +25,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class AssociationsDataLoadDriver {
 
     public static void main(String[] args) throws Exception {
+        ConfigurationHolder.getConfiguration();
         Configuration conf = HBaseConfiguration.create();
         args = new GenericOptionsParser(conf, args).getRemainingArgs();
 
@@ -31,6 +33,8 @@ public class AssociationsDataLoadDriver {
         try(HConnection connection = HConnectionManager.createConnection(conf)) {
             instance = new InstancesDaoImpl(connection).get(args[0]);
         }
+
+        if(instance == null) throw new RuntimeException("Instance \"" + args[0] + "\" isn't found!");
 
         // Load hbase-site.xml
         HBaseConfiguration.addHbaseResources(conf);

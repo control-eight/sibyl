@@ -2,6 +2,11 @@ package com.my.sibyl.itemsets.rest;
 
 import com.my.sibyl.itemsets.AssociationService;
 import com.my.sibyl.itemsets.AssociationServiceImpl;
+import com.my.sibyl.itemsets.ConfigurationHolder;
+import com.my.sibyl.itemsets.InstancesService;
+import com.my.sibyl.itemsets.InstancesServiceImpl;
+import com.my.sibyl.itemsets.model.Instance;
+import com.my.sibyl.itemsets.rest.binding.InstanceBinding;
 import com.my.sibyl.itemsets.rest.binding.TransactionBinding;
 import com.my.sibyl.itemsets.score_function.BasicScoreFunction;
 import com.my.sibyl.itemsets.score_function.ConfidenceRecommendationFilter;
@@ -41,31 +46,81 @@ public class SibylVerticle extends Verticle {
 
     private AssociationService associationService;
 
+    private InstancesService instancesService;
+
     private HConnection connection;
+
+    private String host;
+
+    private Integer port;
+
+    private HeartbeatVerticle heartbeatVerticle;
+
+    public SibylVerticle() {
+    }
+
+    public SibylVerticle(String host) {
+        this.host = host;
+    }
 
     @Override
     public void start() {
+        if(host == null) {
+            host = ConfigurationHolder.getConfiguration().getString("host");
+        }
+        if(port == null) {
+            port = ConfigurationHolder.getConfiguration().getInt("port");
+        }
+
         server = vertx.createHttpServer();
 
-        System.out.println("Connecting to HBase...");
+        LOG.info("Connecting to HBase...");
         Configuration myConf = HBaseConfiguration.create();
         try {
             connection = HConnectionManager.createConnection(myConf);
             associationService = new AssociationServiceImpl(connection);
+            instancesService = new InstancesServiceImpl(connection);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        LOG.info("Connected.");
+
+        /*try {
+            associationService.addTransactionBinding("default", new TransactionBinding("1", Arrays.asList("1", "2", "3"), 123));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
 
         RouteMatcher matcher = new RouteMatcher();
+        startHeartBeat(matcher);
         matcher.get("/api/associations/v1/transactions/", request -> {
             request.response().end(request.uri() + " works!");
         });
         matcher.post("/api/v1/transactions/:instance", this::handleAddTransaction);
         matcher.get("/api/v1/recommendations/:instance/:basketItems", this::handleGetRecommendations);
+        matcher.post("/api/v1/instances", this::handleAddInstance);
+        matcher.get("/api/v1/instances/:instance", this::handleGetInstance);
         matcher.get("/api/v1/test/recommendations/:instance", this::handleGetTestRecommendations);
-        server.requestHandler(matcher).listen(8080, "localhost");
+
+        LOG.info("Host: " + (host == null ? "default" : host));
+        server.requestHandler(matcher).listen(port, (host == null || host.isEmpty()) ? "localhost" : host);
 
         LOG.info("Successfully started.");
+    }
+
+    private void startHeartBeat(RouteMatcher routeMatcher) {
+        heartbeatVerticle = new HeartbeatVerticle();
+        heartbeatVerticle.setRouteMatcher(routeMatcher);
+        heartbeatVerticle.setVertx(getVertx());
+        heartbeatVerticle.setContainer(getContainer());
+
+        boolean heartbeatServer = Boolean.TRUE.equals(getContainer().config().getBoolean("heartbeat"));
+
+        if(heartbeatServer) {
+            heartbeatVerticle.startMonitorInstance(host);
+        } else {
+            heartbeatVerticle.startUsualInstance(host);
+        }
     }
 
     private void handleAddTransaction(final HttpServerRequest request) {
@@ -181,6 +236,80 @@ public class SibylVerticle extends Verticle {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void handleAddInstance(final HttpServerRequest request) {
+        request.bodyHandler(buffer -> {
+
+            LOG.info("Request comes");
+
+            ObjectMapper mapper = new ObjectMapper();
+            InstanceBinding instanceBinding;
+            try {
+                instanceBinding = mapper.readValue(buffer.getBytes(), InstanceBinding.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            LOG.info(instanceBinding);
+
+            instancesService.createInstance(convertInstance(instanceBinding));
+
+            request.response().end("Instance \"" + instanceBinding.getName() + "\" was created successfully!");
+        });
+
+        request.exceptionHandler(throwable -> {
+            LOG.error(throwable, throwable);
+
+            PrintWriter printWriter = new PrintWriter(new StringWriter());
+            throwable.printStackTrace(printWriter);
+            request.response().end(printWriter.toString());
+            printWriter.close();
+        });
+    }
+
+    private void handleGetInstance(final HttpServerRequest request) {
+
+        LOG.info("Request comes");
+        String instance = request.params().get("instance");
+
+        try {
+            Instance instanceObj = instancesService.getInstance(instance);
+            ObjectMapper mapper = new ObjectMapper();
+
+            StringWriter out = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(out);
+
+            InstanceBinding instanceBinding = convertInstance(instanceObj);
+
+            mapper.writeValue(printWriter, instanceBinding);
+
+            request.response().end(out.toString());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private InstanceBinding convertInstance(Instance instanceObj) {
+        InstanceBinding instance = new InstanceBinding();
+        instance.setName(instanceObj.getName());
+        instance.setMeasures(instanceObj.getMeasures());
+        instance.setDataLoadFiles(instanceObj.getDataLoadFiles());
+        instance.setStartLoadDate(instanceObj.getStartLoadDate());
+        instance.setEndLoadDate(instanceObj.getEndLoadDate());
+        instance.setSlidingWindowSize(instanceObj.getSlidingWindowSize());
+        return instance;
+    }
+
+    private Instance convertInstance(InstanceBinding instanceBinding) {
+        Instance instance = new Instance();
+        instance.setName(instanceBinding.getName());
+        instance.setMeasures(instanceBinding.getMeasures());
+        instance.setDataLoadFiles(instanceBinding.getDataLoadFiles());
+        instance.setStartLoadDate(instanceBinding.getStartLoadDate());
+        instance.setEndLoadDate(instanceBinding.getEndLoadDate());
+        instance.setSlidingWindowSize(instanceBinding.getSlidingWindowSize());
+        return instance;
     }
 
     @Override

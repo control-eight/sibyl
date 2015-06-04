@@ -9,11 +9,15 @@ import org.vertx.java.core.VertxFactory;
  * @since 5/27/15
  */
 public class Embedded {
+
     public static void main(String[] args) throws Exception {
+
+        ConfigurationHolder.getConfiguration();
 
         Vertx vertx = VertxFactory.newVertx();
 
-        SibylVerticle sibylVerticle = new SibylVerticle();
+        String host = args.length == 0? null: args[0];
+        SibylVerticle sibylVerticle = new SibylVerticle(host);
         sibylVerticle.setVertx(vertx);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -25,6 +29,8 @@ public class Embedded {
         sibylVerticle.start();
 
         // Prevent the JVM from exiting
-        System.in.read();
+        while (true) {
+            System.in.read();
+        }
     }
 }

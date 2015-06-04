@@ -1,5 +1,6 @@
 package com.my.sibyl.itemsets.data_load.hadoop.transactions_dl;
 
+import com.my.sibyl.itemsets.ConfigurationHolder;
 import com.my.sibyl.itemsets.hbase.dao.TransactionsDaoImpl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -28,6 +29,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class TransactionsDataLoadDriver {
 
     public static void main(String[] args) throws Exception {
+        ConfigurationHolder.getConfiguration();
         Configuration conf = HBaseConfiguration.create();
         args = new GenericOptionsParser(conf, args).getRemainingArgs();
 

@@ -3,17 +3,22 @@
 <configuration>
     <property>
         <name>hbase.zookeeper.quorum</name>
-        <value>172.16.0.199</value>
-        <description>The directory shared by RegionServers.
-        </description>
+        <value>${hbase.zookeeper.quorum}</value>
+        <description>The directory shared by RegionServers.</description>
     </property>
     <property>
         <name>hbase.zookeeper.property.clientPort</name>
-        <value>2181</value>
+        <value>${hbase.zookeeper.property.clientPort}</value>
+    </property>
+    <!--for HORTONWORKS
+    https://2scompliment.wordpress.com/2013/12/11/running-hbase-java-applications-on-hortonworks-hadoop-sandbox-2-x-with-yarn/-->
+    <property>
+        <name>zookeeper.znode.parent</name>
+        <value>${zookeeper.znode.parent}</value>
     </property>
     <property>
         <name>hbase.master</name>
-        <value>172.16.0.199:60000</value>
+        <value>${hbase.master}</value>
     </property>
     <!--<property>
         <name>hbase.rootdir</name>
@@ -21,14 +26,14 @@
         <description>The directory shared by RegionServers.
         </description>
     </property>-->
-    <!--<property>
+    <property>
         <name>hbase.cluster.distributed</name>
-        <value>true</value>
+        <value>${hbase.cluster.distributed}</value>
         <description>The mode the cluster will be in. Possible values are
             false: standalone and pseudo-distributed setups with managed Zookeeper
             true: fully-distributed with unmanaged Zookeeper Quorum (see hbase-env.sh)
         </description>
-    </property>-->
+    </property>
 
     <!--<property>
         <name>hbase.zookeeper.property.dataDir</name>
@@ -41,14 +46,6 @@
         <name>hbase.rootdir</name>
         <value>hdfs://example0:8020/hbase</value>
         <description>The directory shared by RegionServers.
-        </description>
-    </property>
-    <property>
-        <name>hbase.cluster.distributed</name>
-        <value>true</value>
-        <description>The mode the cluster will be in. Possible values are
-            false: standalone and pseudo-distributed setups with managed Zookeeper
-            true: fully-distributed with unmanaged Zookeeper Quorum (see hbase-env.sh)
         </description>
     </property>-->
 </configuration>
