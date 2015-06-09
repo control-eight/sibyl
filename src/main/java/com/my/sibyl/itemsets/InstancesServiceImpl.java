@@ -10,18 +10,23 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 
 /**
  * @author abykovsky
  * @since 1/28/15
  */
+@Singleton
 public class InstancesServiceImpl implements InstancesService {
 
     private static final Log LOG = LogFactory.getLog(InstancesServiceImpl.class);
 
+    @Inject
     private InstancesDao instancesDao;
 
+    @Inject
     private ItemSetsDao itemSetsDao;
 
     public InstancesServiceImpl() {

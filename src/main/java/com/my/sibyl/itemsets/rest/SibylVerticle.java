@@ -1,10 +1,13 @@
 package com.my.sibyl.itemsets.rest;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.my.sibyl.itemsets.AssociationService;
 import com.my.sibyl.itemsets.AssociationServiceImpl;
 import com.my.sibyl.itemsets.ConfigurationHolder;
 import com.my.sibyl.itemsets.InstancesService;
 import com.my.sibyl.itemsets.InstancesServiceImpl;
+import com.my.sibyl.itemsets.guice.AppInjector;
 import com.my.sibyl.itemsets.model.Instance;
 import com.my.sibyl.itemsets.rest.binding.InstanceBinding;
 import com.my.sibyl.itemsets.rest.binding.TransactionBinding;
@@ -16,10 +19,7 @@ import com.my.sibyl.itemsets.score_function.ScoreFunctionResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
@@ -48,13 +48,13 @@ public class SibylVerticle extends Verticle {
 
     private InstancesService instancesService;
 
-    private HConnection connection;
-
     private String host;
 
     private Integer port;
 
     private HeartbeatVerticle heartbeatVerticle;
+
+    private HConnection connection;
 
     public SibylVerticle() {
     }
@@ -65,6 +65,7 @@ public class SibylVerticle extends Verticle {
 
     @Override
     public void start() {
+
         if(host == null) {
             host = ConfigurationHolder.getConfiguration().getString("host");
         }
@@ -74,16 +75,11 @@ public class SibylVerticle extends Verticle {
 
         server = vertx.createHttpServer();
 
-        LOG.info("Connecting to HBase...");
-        Configuration myConf = HBaseConfiguration.create();
-        try {
-            connection = HConnectionManager.createConnection(myConf);
-            associationService = new AssociationServiceImpl(connection);
-            instancesService = new InstancesServiceImpl(connection);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        LOG.info("Connected.");
+        //init google guice
+        Injector injector = Guice.createInjector(new AppInjector());
+        associationService = injector.getInstance(AssociationServiceImpl.class);
+        instancesService = injector.getInstance(InstancesServiceImpl.class);
+        connection = injector.getInstance(HConnection.class);
 
         /*try {
             associationService.addTransactionBinding("default", new TransactionBinding("1", Arrays.asList("1", "2", "3"), 123));

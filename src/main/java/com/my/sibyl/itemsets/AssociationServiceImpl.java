@@ -19,6 +19,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +36,7 @@ import java.util.Set;
  * @author abykovsky
  * @since 1/21/15
  */
+@Singleton
 public class AssociationServiceImpl implements AssociationService {
 
     private static final Log LOG = LogFactory.getLog(AssociationServiceImpl.class);
@@ -44,8 +47,10 @@ public class AssociationServiceImpl implements AssociationService {
 
     private ItemSetsGenerator itemSetsGenerator = new ItemSetsGenerator(maxItemSetLength);
 
+    @Inject
     private ItemSetsDao itemSetsDao;
 
+    @Inject
     private TransactionsDao transactionsDao;
 
     public AssociationServiceImpl() {

@@ -23,6 +23,8 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,6 +38,7 @@ import java.util.NavigableMap;
  * @author abykovsky
  * @since 1/21/15
  */
+@Singleton
 public class ItemSetsDaoImpl implements ItemSetsDao {
 
     public static final String TABLE_NAME = "item_sets";
@@ -44,7 +47,11 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     public static final byte[] ASSOCIATION_FAM = Bytes.toBytes("A");
     public static final byte[] COUNT_COL = Bytes.toBytes("C");
 
+    @Inject
     private HConnection connection;
+
+    public ItemSetsDaoImpl() {
+    }
 
     public ItemSetsDaoImpl(final HConnection connection) {
         this.connection = connection;
@@ -180,7 +187,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
         for (Recommendation recommendation : recommendations) {
             Get get = new Get(Bytes.toBytes(recommendation.getAssociationId()));
             get.addColumn(COUNT_FAM, COUNT_COL);
-            batch.add(get);
+            addToBatch(batch, get);
         }
 
         try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
@@ -202,7 +209,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
         for (String itemSetRowKey : itemSetRowKeys) {
             Get get = new Get(Bytes.toBytes(itemSetRowKey));
             get.addColumn(COUNT_FAM, COUNT_COL);
-            batch.add(get);
+            addToBatch(batch, get);
         }
 
         try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
@@ -218,6 +225,10 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
             }
             return result;
         }
+    }
+
+    <T> void addToBatch(List<T> batch, T operation) {
+        batch.add(operation);
     }
 
     @Override

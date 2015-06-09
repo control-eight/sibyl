@@ -12,19 +12,26 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 
 /**
  * @author abykovsky
  * @since 1/28/15
  */
+@Singleton
 public class InstancesDaoImpl implements InstancesDao {
 
     public static final byte[] TABLE_NAME = Bytes.toBytes("instances");
     public static final byte[] INFO_FAM = Bytes.toBytes("I");
     public static final byte[] CONFIGURATION_COLUMN = Bytes.toBytes("C");
 
+    @Inject
     private HConnection connection;
+
+    public InstancesDaoImpl() {
+    }
 
     public InstancesDaoImpl(HConnection connection) {
         this.connection = connection;

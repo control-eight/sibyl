@@ -10,6 +10,8 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,6 +21,7 @@ import java.util.List;
  * @author abykovsky
  * @since 1/29/15
  */
+@Singleton
 public class TransactionsDaoImpl implements com.my.sibyl.itemsets.dao.TransactionsDao {
 
     public static final String TABLE_NAME_STRING = "transactions";
@@ -26,7 +29,11 @@ public class TransactionsDaoImpl implements com.my.sibyl.itemsets.dao.Transactio
     public static final byte[] INFO_FAM = Bytes.toBytes("I");
     public static final byte[] ITEMS_COLUMN = Bytes.toBytes("T");
 
+    @Inject
     private HConnection connection;
+
+    public TransactionsDaoImpl() {
+    }
 
     public TransactionsDaoImpl(HConnection connection) {
         this.connection = connection;
