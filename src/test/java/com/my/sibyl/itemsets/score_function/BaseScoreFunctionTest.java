@@ -1,9 +1,12 @@
 package com.my.sibyl.itemsets.score_function;
 
+import com.my.sibyl.itemsets.model.Measure;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -19,8 +22,11 @@ public class BaseScoreFunctionTest {
         List<Recommendation> list = Arrays.asList(createRecommendation(9.0, 5), createRecommendation(10.0, 15),
                 createRecommendation(8.0, 5), createRecommendation(8.0, 10), createRecommendation(10.0, 20));
 
-        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(-1, Collections.emptyList(), true);
-        Collections.sort(list, scoreFunction);
+        Collections.sort(list, (o1, o2) -> {
+            int result = -Double.compare(o1.getLift(), o2.getLift());
+            if(result != 0) return result;
+            return -Long.compare(o1.getAssociationCount(), o2.getAssociationCount());
+        });
 
         double delta = 1e-10;
         assertEquals("Lift [0]", 10.0, list.get(0).getLift(), delta);

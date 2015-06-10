@@ -10,10 +10,10 @@ import com.my.sibyl.itemsets.model.Instance;
 import com.my.sibyl.itemsets.model.Measure;
 import com.my.sibyl.itemsets.model.Transaction;
 import com.my.sibyl.itemsets.score_function.BasicScoreFunction;
-import com.my.sibyl.itemsets.score_function.ConfidenceRecommendationFilter;
 import com.my.sibyl.itemsets.score_function.Recommendation;
 import com.my.sibyl.itemsets.score_function.ScoreFunction;
 import edu.emory.mathcs.backport.java.util.Collections;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -158,7 +158,7 @@ public class TestItemSetsDao {
     }
 
     private static void getRecommendations(HConnection connection) throws IOException {
-        boolean isLiftInUse = true;
+        /*boolean isLiftInUse = true;
         double confidence = 0.0005;
         int maxResults = 10;
         ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(maxResults,
@@ -167,7 +167,14 @@ public class TestItemSetsDao {
                     public boolean filter(Double value) {
                         return value < confidence;
                     }
-                }), isLiftInUse);
+                }), isLiftInUse);*/
+
+        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(
+                java.util.Collections.singletonList(new ImmutablePair<>(Measure.CONFIDENCE, 0.0005)),
+                java.util.Collections.singletonList(Measure.LIFT),
+                Arrays.asList(Measure.COUNT, Measure.SUPPORT, Measure.CONFIDENCE, Measure.LIFT),
+                10
+        );
 
         System.out.println(new AssociationServiceImpl(connection)
                 .getRecommendations(InstancesService.DEFAULT, makeBasketItems2(), scoreFunction));

@@ -14,18 +14,8 @@ public class ScoreFunctionResult<T> implements Serializable {
 
     private final Map<String, Number> measures = new HashMap<>();
 
-    public ScoreFunctionResult(T result, double confidence, double lift) {
+    public ScoreFunctionResult(T result) {
         this.result = result;
-        this.measures.put("confidence", confidence);
-        this.measures.put("lift", lift);
-    }
-
-    public ScoreFunctionResult(T result, long count, double support, double confidence, double lift) {
-        this.result = result;
-        this.measures.put("count", count);
-        this.measures.put("support", support);
-        this.measures.put("confidence", confidence);
-        this.measures.put("lift", lift);
     }
 
     public T getResult() {

@@ -1,12 +1,13 @@
 package com.my.sibyl.itemsets;
 
 import com.my.sibyl.itemsets.dao.ItemSetsDao;
+import com.my.sibyl.itemsets.model.Measure;
 import com.my.sibyl.itemsets.score_function.BasicScoreFunction;
-import com.my.sibyl.itemsets.score_function.ConfidenceRecommendationFilter;
 import com.my.sibyl.itemsets.score_function.Recommendation;
 import com.my.sibyl.itemsets.score_function.ScoreFunction;
 import com.my.sibyl.itemsets.score_function.ScoreFunctionResult;
 import com.my.sibyl.itemsets.util.ItemSetsGenerator;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -96,7 +98,7 @@ public class AssociationServiceImplTest {
         mockGetAssociations("1-3", Arrays.asList("2"), Arrays.asList(4l));
         mockGetAssociations("2-3", Arrays.asList("1"), Arrays.asList(10l));
 
-        boolean isLiftInUse = false;
+        /*boolean isLiftInUse = false;
         double confidence = 0.5;
         int maxResults = 10;
         ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(maxResults,
@@ -105,8 +107,14 @@ public class AssociationServiceImplTest {
             public boolean filter(Double value) {
                 return value < confidence;
             }
-        }), isLiftInUse);
+        }), isLiftInUse);*/
 
+        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(
+                Collections.singletonList(new ImmutablePair<>(Measure.CONFIDENCE, 0.5)),
+                Collections.singletonList(Measure.LIFT),
+            Arrays.asList(Measure.COUNT, Measure.SUPPORT, Measure.CONFIDENCE, Measure.LIFT),
+            10
+        );
 
         List<ScoreFunctionResult<String>> testResult = associationService.getRecommendations(InstancesService.DEFAULT,
                 basketItems, scoreFunction);
@@ -148,17 +156,12 @@ public class AssociationServiceImplTest {
 
         when(mockItemSetsDao.getItemSetCount(DEFAULT, AssociationServiceImpl.TRANSACTIONS_COUNT_ROW_KEY)).thenReturn(1l);
 
-        boolean isLiftInUse = true;
-        double confidence = 0.5;
-        int maxResults = 10;
-        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(maxResults,
-                Arrays.asList(new ConfidenceRecommendationFilter() {
-                    @Override
-                    public boolean filter(Double value) {
-                        return value < confidence;
-                    }
-                }), isLiftInUse);
-
+        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(
+                Collections.singletonList(new ImmutablePair<>(Measure.CONFIDENCE, 0.5)),
+                Arrays.asList(Measure.LIFT, Measure.COUNT),
+                Arrays.asList(Measure.COUNT, Measure.SUPPORT, Measure.CONFIDENCE, Measure.LIFT),
+                10
+        );
 
         List<ScoreFunctionResult<String>> testResult = associationService.getRecommendations(InstancesService.DEFAULT,
                 basketItems, scoreFunction);

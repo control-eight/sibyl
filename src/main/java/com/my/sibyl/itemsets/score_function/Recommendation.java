@@ -66,7 +66,6 @@ public class Recommendation {
         this.countOfAssociationAsItemSet = countOfAssociationAsItemSet;
     }
 
-    //TODO precision
     public double getSupport() {
         return support;
     }
@@ -75,7 +74,6 @@ public class Recommendation {
         this.support = support;
     }
 
-    //TODO precision
     public double getConfidence() {
         return confidence;
     }

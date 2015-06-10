@@ -21,6 +21,14 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.exceptions.HBaseException;
+import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.FamilyFilter;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
+import org.apache.hadoop.hbase.filter.SubstringComparator;
+import org.apache.hadoop.hbase.filter.ValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import javax.inject.Inject;
@@ -250,6 +258,28 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
     }
 
     @Override
+    public Map<String, Long> getAssociations(String instanceName, String itemSetRowKey, Long moreThanAssocCount) throws IOException {
+        Get g = new Get(Bytes.toBytes(itemSetRowKey));
+        g.addFamily(ASSOCIATION_FAM);
+
+        Filter filter = new ValueFilter(CompareFilter.CompareOp.GREATER_OR_EQUAL,
+                new BinaryComparator(Bytes.toBytes(moreThanAssocCount)));
+        g.setFilter(filter);
+
+        Map<String, Long> associationMap = new HashMap<>();
+        try(HTableInterface itemSets = connection.getTable(getTableName(instanceName))) {
+            Result result = itemSets.get(g);
+            if(result == null) return Collections.emptyMap();
+            NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(ASSOCIATION_FAM);
+            if(familyMap == null) return Collections.emptyMap();
+            for (Map.Entry<byte[], byte[]> entry : familyMap.entrySet()) {
+                associationMap.put(Bytes.toString(entry.getKey()), Bytes.toLong(entry.getValue()));
+            }
+        }
+        return associationMap;
+    }
+
+    @Override
     public void createTable(String instanceName) throws HBaseException, IOException {
         try {
             HBaseAdmin hBaseAdmin = new HBaseAdmin(connection);
@@ -283,7 +313,6 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
             ResultScanner resultScanner = transactions.getScanner(scan);
 
             Result[] results = resultScanner.next(1000);
-            int i = 0;
             Map<String, Long> resultMap = new HashMap<>();
             while (results != null && results.length != 0) {
                 for (Result result : results) {
@@ -293,15 +322,6 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
                     }
                 }
                 results = resultScanner.next(1000);
-                if(i % 100000 == 0) {
-                    System.out.println(i);
-                }
-                if(i % 1500000 == 0) {
-                    for (String s : resultMap.keySet()) {
-                        System.out.println(s);
-                    }
-                }
-                i += results.length;
             }
             return resultMap;
         }

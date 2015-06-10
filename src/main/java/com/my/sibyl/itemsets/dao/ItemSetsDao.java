@@ -37,6 +37,8 @@ public interface ItemSetsDao {
 
     Map<String, Long> getAssociations(String instanceName, String itemSetRowKey) throws IOException;
 
+    Map<String, Long> getAssociations(String instanceName, String itemSetRowKey, Long moreThanAssocCount) throws IOException;
+
     void createTable(String instanceName) throws HBaseException, IOException;
 
     void deleteTable(String name) throws HBaseException, IOException;

@@ -9,6 +9,7 @@ import java.util.List;
  */
 public enum Measure {
 
+    COUNT,
     SUPPORT,
     CONFIDENCE,
     LIFT;

@@ -7,18 +7,19 @@ import com.my.sibyl.itemsets.AssociationServiceImpl;
 import com.my.sibyl.itemsets.ConfigurationHolder;
 import com.my.sibyl.itemsets.InstancesService;
 import com.my.sibyl.itemsets.InstancesServiceImpl;
+import com.my.sibyl.itemsets.dao.ItemSetsDao;
 import com.my.sibyl.itemsets.guice.AppInjector;
 import com.my.sibyl.itemsets.model.Instance;
+import com.my.sibyl.itemsets.model.Measure;
 import com.my.sibyl.itemsets.rest.binding.InstanceBinding;
 import com.my.sibyl.itemsets.rest.binding.InstanceStatus;
 import com.my.sibyl.itemsets.rest.binding.TransactionBinding;
 import com.my.sibyl.itemsets.score_function.BasicScoreFunction;
-import com.my.sibyl.itemsets.score_function.ConfidenceRecommendationFilter;
-import com.my.sibyl.itemsets.score_function.CountRecommendationFilter;
 import com.my.sibyl.itemsets.score_function.Recommendation;
 import com.my.sibyl.itemsets.score_function.ScoreFunction;
 import com.my.sibyl.itemsets.score_function.ScoreFunctionResult;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -87,6 +88,13 @@ public class SibylVerticle extends Verticle {
         instancesService = injector.getInstance(InstancesServiceImpl.class);
         connection = injector.getInstance(HConnection.class);
         mapper = injector.getInstance(ObjectMapper.class);
+
+        ItemSetsDao itemSetsDao = injector.getInstance(ItemSetsDao.class);
+        try {
+            System.out.println("res: " + itemSetsDao.getAssociations("default", "1107571", 2l));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         /*try {
             associationService.addTransactionBinding("default", new TransactionBinding("1", Arrays.asList("1", "2", "3"), 123));
@@ -173,8 +181,6 @@ public class SibylVerticle extends Verticle {
                 List<ScoreFunctionResult<String>> results = associationService
                         .getRecommendations(instance, basketItems, scoreFunction);
 
-
-
                 StringWriter out = new StringWriter();
                 PrintWriter printWriter = new PrintWriter(out);
 
@@ -189,21 +195,14 @@ public class SibylVerticle extends Verticle {
     }
 
     private ScoreFunction<Recommendation> createBasicScoreFunction() {
-        final boolean isLiftInUse = true;
-        final long minCount = 10;
-        final double confidence = 0.0005;
-        //final double confidence = 0.1;
-        final int maxResults = 10;
-        return new BasicScoreFunction(maxResults,
-                Arrays.asList(new CountRecommendationFilter() {
-                    @Override
-                    public boolean filter(Long value) { return value < minCount; }
-                }, new ConfidenceRecommendationFilter() {
-                    @Override
-                    public boolean filter(Double value) {
-                        return value < confidence;
-                    }
-                }), isLiftInUse);
+        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(
+                Arrays.asList(new ImmutablePair<>(Measure.COUNT, 10),
+                        new ImmutablePair<>(Measure.CONFIDENCE, 0.0005)),
+                Arrays.asList(Measure.LIFT, Measure.COUNT),
+                Arrays.asList(Measure.COUNT, Measure.SUPPORT, Measure.CONFIDENCE, Measure.LIFT),
+                10
+        );
+        return scoreFunction;
     }
 
     private void handleGetTestRecommendations(final HttpServerRequest request) {

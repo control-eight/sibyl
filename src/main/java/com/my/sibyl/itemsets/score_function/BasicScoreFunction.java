@@ -1,6 +1,9 @@
 package com.my.sibyl.itemsets.score_function;
 
-import java.util.ArrayList;
+import com.my.sibyl.itemsets.model.Measure;
+import edu.emory.mathcs.backport.java.util.Collections;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.List;
 
 /**
@@ -9,52 +12,59 @@ import java.util.List;
  */
 public class BasicScoreFunction implements ScoreFunction<Recommendation> {
 
+    private List<Pair<Measure, Number>> thresholds;
+
+    private List<Measure> sortParams;
+
+    private List<Measure> outputParams;
+
     private int maxResults;
 
-    private List<RecommendationFilter> recommendationFilters = new ArrayList<>();
-
-    private boolean isLiftInUse;
-
-    public BasicScoreFunction(int maxResults, List<RecommendationFilter> recommendationFilters, boolean isLiftInUse) {
+    public BasicScoreFunction(List<Pair<Measure, Number>> thresholds, List<Measure> sortParams, List<Measure> outputParams,
+                              int maxResults) {
+        this.thresholds = Collections.unmodifiableList(thresholds);
+        this.sortParams = Collections.unmodifiableList(sortParams);
+        this.outputParams = Collections.unmodifiableList(outputParams);
         this.maxResults = maxResults;
-        this.recommendationFilters = recommendationFilters;
-        this.isLiftInUse = isLiftInUse;
     }
 
     @Override
-    public List<RecommendationFilter> getRecommendationFilters() {
-        return recommendationFilters;
+    public List<Pair<Measure, Number>> getThresholds() {
+        return thresholds;
     }
 
     @Override
-    public List<Recommendation> cut(List<Recommendation> recommendationList) {
-        return recommendationList.subList(0, Math.min(recommendationList.size(), maxResults));
+    public Number getThresholdValue(Measure measure) {
+        return thresholds.stream().filter(pair -> pair.getKey() == measure).findAny().get().getValue();
     }
 
     @Override
-    public int compare(Recommendation o1, Recommendation o2) {
-        /*double result = o1.getConfidence() - o2.getConfidence();
-        if(result < 0) return 1;
-        if(result > 0) return -1;*/
-
-        double result = o1.getLift() - o2.getLift();
-        if(result < 0) return 1;
-        if(result > 0) return -1;
-
-        return (int) (-1 * (o1.getAssociationCount() - o2.getAssociationCount()));
+    public boolean containsThresholdsMeasure(Measure measure) {
+        return thresholds.stream().anyMatch(measureNumberPair -> measureNumberPair.getKey() == measure);
     }
 
     @Override
-    public boolean isLiftInUse() {
-        return isLiftInUse;
+    public List<Measure> getSortParams() {
+        return sortParams;
+    }
+
+    @Override
+    public List<Measure> getOutputParams() {
+        return outputParams;
+    }
+
+    @Override
+    public int getMaxResults() {
+        return maxResults;
     }
 
     @Override
     public String toString() {
         return "BasicScoreFunction{" +
-                "maxResults=" + maxResults +
-                ", recommendationFilters=" + recommendationFilters +
-                ", isLiftInUse=" + isLiftInUse +
+                "thresholds=" + thresholds +
+                ", sortParams=" + sortParams +
+                ", outputParams=" + outputParams +
+                ", maxResults=" + maxResults +
                 '}';
     }
 }
