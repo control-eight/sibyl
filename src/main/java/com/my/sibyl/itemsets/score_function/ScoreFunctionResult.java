@@ -20,6 +20,14 @@ public class ScoreFunctionResult<T> implements Serializable {
         this.measures.put("lift", lift);
     }
 
+    public ScoreFunctionResult(T result, long count, double support, double confidence, double lift) {
+        this.result = result;
+        this.measures.put("count", count);
+        this.measures.put("support", support);
+        this.measures.put("confidence", confidence);
+        this.measures.put("lift", lift);
+    }
+
     public T getResult() {
         return result;
     }

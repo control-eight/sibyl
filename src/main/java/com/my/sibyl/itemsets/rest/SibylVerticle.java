@@ -10,9 +10,11 @@ import com.my.sibyl.itemsets.InstancesServiceImpl;
 import com.my.sibyl.itemsets.guice.AppInjector;
 import com.my.sibyl.itemsets.model.Instance;
 import com.my.sibyl.itemsets.rest.binding.InstanceBinding;
+import com.my.sibyl.itemsets.rest.binding.InstanceStatus;
 import com.my.sibyl.itemsets.rest.binding.TransactionBinding;
 import com.my.sibyl.itemsets.score_function.BasicScoreFunction;
 import com.my.sibyl.itemsets.score_function.ConfidenceRecommendationFilter;
+import com.my.sibyl.itemsets.score_function.CountRecommendationFilter;
 import com.my.sibyl.itemsets.score_function.Recommendation;
 import com.my.sibyl.itemsets.score_function.ScoreFunction;
 import com.my.sibyl.itemsets.score_function.ScoreFunctionResult;
@@ -21,6 +23,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.RouteMatcher;
@@ -56,6 +60,8 @@ public class SibylVerticle extends Verticle {
 
     private HConnection connection;
 
+    private ObjectMapper mapper;
+
     public SibylVerticle() {
     }
 
@@ -80,6 +86,7 @@ public class SibylVerticle extends Verticle {
         associationService = injector.getInstance(AssociationServiceImpl.class);
         instancesService = injector.getInstance(InstancesServiceImpl.class);
         connection = injector.getInstance(HConnection.class);
+        mapper = injector.getInstance(ObjectMapper.class);
 
         /*try {
             associationService.addTransactionBinding("default", new TransactionBinding("1", Arrays.asList("1", "2", "3"), 123));
@@ -121,13 +128,12 @@ public class SibylVerticle extends Verticle {
 
     private void handleAddTransaction(final HttpServerRequest request) {
 
-        request.bodyHandler(buffer -> {
+        request.bodyHandler(createBodyHandler(request, buffer -> {
 
             LOG.info("Request comes");
 
             String instance = request.params().get("instance");
 
-            ObjectMapper mapper = new ObjectMapper();
             TransactionBinding transactionBinding;
             try {
                 transactionBinding = mapper.readValue(buffer.getBytes(), TransactionBinding.class);
@@ -145,27 +151,18 @@ public class SibylVerticle extends Verticle {
 
             request.response().end("Transaction " + transactionBinding.getId() + " to instance \"" + instance
                     + "\" was added successfully!");
-        });
-
-        request.exceptionHandler(throwable -> {
-            LOG.error(throwable, throwable);
-
-            PrintWriter printWriter = new PrintWriter(new StringWriter());
-            throwable.printStackTrace(printWriter);
-            request.response().end(printWriter.toString());
-            printWriter.close();
-        });
+        }));
     }
 
     private void handleGetRecommendations(final HttpServerRequest request) {
-        request.bodyHandler(buffer -> {
+        request.bodyHandler(createBodyHandler(request, buffer -> {
 
             LOG.info("Request comes");
 
             String instance = request.params().get("instance");
             String[] basketItemses = StringUtils.split(request.params().get("basketItems"), ",");
 
-            if(basketItemses == null || basketItemses.length == 0)
+            if (basketItemses == null || basketItemses.length == 0)
                 throw new RuntimeException("Basket items can't be empty!");
 
             List<String> basketItems = Arrays.asList(basketItemses);
@@ -176,10 +173,11 @@ public class SibylVerticle extends Verticle {
                 List<ScoreFunctionResult<String>> results = associationService
                         .getRecommendations(instance, basketItems, scoreFunction);
 
-                ObjectMapper mapper = new ObjectMapper();
+
 
                 StringWriter out = new StringWriter();
                 PrintWriter printWriter = new PrintWriter(out);
+
                 mapper.writeValue(printWriter, results);
 
                 request.response().end(out.toString());
@@ -187,25 +185,20 @@ public class SibylVerticle extends Verticle {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        });
-
-        request.exceptionHandler(throwable -> {
-            LOG.error(throwable, throwable);
-
-            PrintWriter printWriter = new PrintWriter(new StringWriter());
-            throwable.printStackTrace(printWriter);
-            request.response().end(printWriter.toString());
-            printWriter.close();
-        });
+        }));
     }
 
     private ScoreFunction<Recommendation> createBasicScoreFunction() {
         final boolean isLiftInUse = true;
+        final long minCount = 10;
         final double confidence = 0.0005;
         //final double confidence = 0.1;
         final int maxResults = 10;
         return new BasicScoreFunction(maxResults,
-                Collections.singletonList(new ConfidenceRecommendationFilter() {
+                Arrays.asList(new CountRecommendationFilter() {
+                    @Override
+                    public boolean filter(Long value) { return value < minCount; }
+                }, new ConfidenceRecommendationFilter() {
                     @Override
                     public boolean filter(Double value) {
                         return value < confidence;
@@ -215,31 +208,32 @@ public class SibylVerticle extends Verticle {
 
     private void handleGetTestRecommendations(final HttpServerRequest request) {
 
-        LOG.info("Request comes");
-        String count = request.params().get("count");
-        String instance = request.params().get("instance");
+        request.bodyHandler(createBodyHandler(request, buffer -> {
 
-        try {
-            Map<String, Long> results = associationService.getItemSetWithCountMore(instance,
-                    Integer.parseInt(count));
-            ObjectMapper mapper = new ObjectMapper();
+            LOG.info("Request comes");
+            String count = request.params().get("count");
+            String instance = request.params().get("instance");
 
-            StringWriter out = new StringWriter();
-            PrintWriter printWriter = new PrintWriter(out);
-            mapper.writeValue(printWriter, results);
+            try {
+                Map<String, Long> results = associationService.getItemSetWithCountMore(instance,
+                        Integer.parseInt(count));
 
-            request.response().end(out.toString());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+                StringWriter out = new StringWriter();
+                PrintWriter printWriter = new PrintWriter(out);
+                mapper.writeValue(printWriter, results);
+
+                request.response().end(out.toString());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
     }
 
     private void handleAddInstance(final HttpServerRequest request) {
-        request.bodyHandler(buffer -> {
+        request.bodyHandler(createBodyHandler(request, buffer -> {
 
             LOG.info("Request comes");
 
-            ObjectMapper mapper = new ObjectMapper();
             InstanceBinding instanceBinding;
             try {
                 instanceBinding = mapper.readValue(buffer.getBytes(), InstanceBinding.class);
@@ -252,54 +246,64 @@ public class SibylVerticle extends Verticle {
             instancesService.createInstance(convertInstance(instanceBinding));
 
             request.response().end("Instance \"" + instanceBinding.getName() + "\" was created successfully!");
-        });
+        }));
+    }
 
-        request.exceptionHandler(throwable -> {
-            LOG.error(throwable, throwable);
-
-            PrintWriter printWriter = new PrintWriter(new StringWriter());
-            throwable.printStackTrace(printWriter);
-            request.response().end(printWriter.toString());
-            printWriter.close();
-        });
+    private Handler<Buffer> createBodyHandler(final HttpServerRequest request, Handler<Buffer> bodyHandler) {
+        return new RestHandler(request, bodyHandler);
     }
 
     private void handleGetInstance(final HttpServerRequest request) {
 
-        LOG.info("Request comes");
-        String instance = request.params().get("instance");
+        request.bodyHandler(createBodyHandler(request, buffer -> {
 
-        try {
-            Instance instanceObj = instancesService.getInstance(instance);
-            ObjectMapper mapper = new ObjectMapper();
+            LOG.info("Request comes");
+            String instance = request.params().get("instance");
 
-            StringWriter out = new StringWriter();
-            PrintWriter printWriter = new PrintWriter(out);
+            try {
+                Instance instanceObj = instancesService.getInstance(instance);
 
-            InstanceBinding instanceBinding = convertInstance(instanceObj);
+                StringWriter out = new StringWriter();
+                PrintWriter printWriter = new PrintWriter(out);
 
-            mapper.writeValue(printWriter, instanceBinding);
+                InstanceStatus instanceStatus = convertInstanceToStatus(instanceObj);
+                instanceStatus.setTransactionsCount(associationService.getTransactionsCount(instance));
 
-            request.response().end(out.toString());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+                mapper.writeValue(printWriter, instanceStatus);
+
+                request.response().end(out.toString());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
     }
 
     private InstanceBinding convertInstance(Instance instanceObj) {
         InstanceBinding instance = new InstanceBinding();
+        convertInstance(instanceObj, instance);
+        return instance;
+    }
+
+    private void convertInstance(Instance instanceObj, InstanceBinding instance) {
         instance.setName(instanceObj.getName());
+        instance.setDescription(instanceObj.getDescription());
         instance.setMeasures(instanceObj.getMeasures());
         instance.setDataLoadFiles(instanceObj.getDataLoadFiles());
         instance.setStartLoadDate(instanceObj.getStartLoadDate());
         instance.setEndLoadDate(instanceObj.getEndLoadDate());
         instance.setSlidingWindowSize(instanceObj.getSlidingWindowSize());
+    }
+
+    private InstanceStatus convertInstanceToStatus(Instance instanceObj) {
+        InstanceStatus instance = new InstanceStatus();
+        convertInstance(instanceObj, instance);
         return instance;
     }
 
     private Instance convertInstance(InstanceBinding instanceBinding) {
         Instance instance = new Instance();
         instance.setName(instanceBinding.getName());
+        instance.setDescription(instanceBinding.getDescription());
         instance.setMeasures(instanceBinding.getMeasures());
         instance.setDataLoadFiles(instanceBinding.getDataLoadFiles());
         instance.setStartLoadDate(instanceBinding.getStartLoadDate());

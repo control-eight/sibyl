@@ -24,5 +24,7 @@ public interface AssociationService {
                                                                  ScoreFunction<Recommendation> scoreFunction)
             throws IOException;
 
+    long getTransactionsCount(String instanceName) throws IOException;
+
     Map<String, Long> getItemSetWithCountMore(String instanceName, long count) throws IOException;
 }

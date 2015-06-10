@@ -9,6 +9,7 @@ import java.util.List;
 public class InstanceBinding {
 
     private String name;
+    private String description;
     private List<String> measures;
     private List<String> dataLoadFiles;
     private long startLoadDate;
@@ -21,6 +22,14 @@ public class InstanceBinding {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public List<String> getMeasures() {
@@ -67,6 +76,7 @@ public class InstanceBinding {
     public String toString() {
         return "InstanceBinding{" +
                 "name='" + name + '\'' +
+                ", description=" + description +
                 ", measures=" + measures +
                 ", dataLoadFiles=" + dataLoadFiles +
                 ", startLoadDate=" + startLoadDate +

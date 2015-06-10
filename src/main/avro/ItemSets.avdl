@@ -3,6 +3,7 @@ protocol ItemSets {
 
   record Instance {
     string name;
+    string description;
     array<string> measures = [];
     array<string> dataLoadFiles = [];
     long startLoadDate;

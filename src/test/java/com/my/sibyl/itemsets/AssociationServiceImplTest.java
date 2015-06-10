@@ -80,6 +80,7 @@ public class AssociationServiceImplTest {
 
         when(mockItemSetsGenerator.generateCombinations(basketItems)).thenReturn(itemSets);
 
+        when(mockItemSetsDao.getItemSetCount(DEFAULT, AssociationServiceImpl.TRANSACTIONS_COUNT_ROW_KEY)).thenReturn(100l);
         when(mockItemSetsDao.getItemSetCount(DEFAULT, "1")).thenReturn(10l);
         when(mockItemSetsDao.getItemSetCount(DEFAULT, "2")).thenReturn(5l);
         when(mockItemSetsDao.getItemSetCount(DEFAULT, "3")).thenReturn(10l);

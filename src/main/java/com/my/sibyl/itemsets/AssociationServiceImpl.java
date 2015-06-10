@@ -8,6 +8,7 @@ import com.my.sibyl.itemsets.hbase.dao.TransactionsDaoImpl;
 import com.my.sibyl.itemsets.model.Transaction;
 import com.my.sibyl.itemsets.rest.binding.TransactionBinding;
 import com.my.sibyl.itemsets.score_function.ConfidenceRecommendationFilter;
+import com.my.sibyl.itemsets.score_function.CountRecommendationFilter;
 import com.my.sibyl.itemsets.score_function.Recommendation;
 import com.my.sibyl.itemsets.score_function.RecommendationFilter;
 import com.my.sibyl.itemsets.score_function.ScoreFunction;
@@ -121,6 +122,8 @@ public class AssociationServiceImpl implements AssociationService {
     public List<ScoreFunctionResult<String>> getRecommendations(String instanceName, List<String> basketItems,
                                                                         ScoreFunction<Recommendation> scoreFunction)
             throws IOException {
+        long transactionsCount = getTransactionsCount(instanceName);
+
         List<String> itemSets = itemSetsGenerator.generateCombinations(basketItems);
 
         //get basic recommendations - itemsets, associations, frequency
@@ -128,7 +131,7 @@ public class AssociationServiceImpl implements AssociationService {
         //filter phase, should be only one logic filter
         filterPhase(scoreFunction, recommendationList);
         //calculate different measures like lift, e.g. metrics
-        calculateMeasures(instanceName, scoreFunction, recommendationList);
+        calculateMeasures(instanceName, scoreFunction, recommendationList, transactionsCount);
         //TODO should be only one logic filter
         //postCalculationMeasuresFilterPhase(scoreFunction, recommendationList);
         //sort
@@ -139,10 +142,15 @@ public class AssociationServiceImpl implements AssociationService {
         recommendationList = scoreFunction.cut(recommendationList);
         //create score function results with measures
         List<ScoreFunctionResult<String>> result = Lists.transform(recommendationList,
-                input -> new ScoreFunctionResult<>(input.getAssociationId(), input.getConfidence(),
-                        input.getLift()));
+                input -> new ScoreFunctionResult<>(input.getAssociationId(), input.getAssociationCount(),
+                        input.getSupport(), input.getConfidence(), input.getLift()));
 
         return result;
+    }
+
+    @Override
+    public long getTransactionsCount(String instanceName) throws IOException {
+        return itemSetsDao.getItemSetCount(instanceName, TRANSACTIONS_COUNT_ROW_KEY);
     }
 
     private List<Recommendation> filterDuplicates(List<Recommendation> recommendationList) {
@@ -156,14 +164,22 @@ public class AssociationServiceImpl implements AssociationService {
     }
 
     private void calculateMeasures(String instanceName, ScoreFunction<Recommendation> scoreFunction,
-                                   List<Recommendation> recommendationList)
+                                   List<Recommendation> recommendationList, long transactionsCount)
             throws IOException {
+        for (Recommendation recommendation : recommendationList) {
+            calculateSupport(transactionsCount, recommendation);
+        }
         if(scoreFunction.isLiftInUse()) {
-            calculateLift(instanceName, recommendationList);
+            calculateLift(instanceName, recommendationList, transactionsCount);
         }
     }
 
-    private void calculateLift(String instanceName, List<Recommendation> recommendationList) throws IOException {
+    private void calculateSupport(long transactionsCount, Recommendation recommendation) {
+        recommendation.setSupport((double)recommendation.getAssociationCount()/transactionsCount);
+    }
+
+    private void calculateLift(String instanceName, List<Recommendation> recommendationList, long transactionsCount)
+            throws IOException {
         //TODO important place for performance
         Map<String, Long> assocCounts = itemSetsDao.getItemSetsCount(instanceName,
                 new HashSet<>(Lists.transform(recommendationList, Recommendation::getAssociationId)));
@@ -172,7 +188,6 @@ public class AssociationServiceImpl implements AssociationService {
             if(count != null) recommendation.setCountOfAssociationAsItemSet(count);
         });
 
-        long transactionsCount = itemSetsDao.getItemSetCount(instanceName, TRANSACTIONS_COUNT_ROW_KEY);
         for (Recommendation recommendation : recommendationList) {
             if(recommendation.getCountOfAssociationAsItemSet() == 0) continue;
             recommendation.setLift(recommendation.getAssociationCount() /
@@ -185,7 +200,14 @@ public class AssociationServiceImpl implements AssociationService {
 
     private void filterPhase(ScoreFunction<Recommendation> scoreFunction, List<Recommendation> recommendationList) {
         for (RecommendationFilter filter : scoreFunction.getRecommendationFilters()) {
-            if(filter instanceof ConfidenceRecommendationFilter) {
+            if (filter instanceof CountRecommendationFilter) {
+                for(Iterator<Recommendation> iterator = recommendationList.iterator(); iterator.hasNext();) {
+                    CountRecommendationFilter theFilter = (CountRecommendationFilter) filter;
+                    if(theFilter.filter(iterator.next().getAssociationCount())) {
+                        iterator.remove();
+                    }
+                }
+            } else if(filter instanceof ConfidenceRecommendationFilter) {
                 calculateConfidence(recommendationList);
                 for(Iterator<Recommendation> iterator = recommendationList.iterator(); iterator.hasNext();) {
                     ConfidenceRecommendationFilter theFilter = (ConfidenceRecommendationFilter) filter;
