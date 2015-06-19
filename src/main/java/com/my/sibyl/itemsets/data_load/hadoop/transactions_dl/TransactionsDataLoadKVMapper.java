@@ -1,16 +1,8 @@
 package com.my.sibyl.itemsets.data_load.hadoop.transactions_dl;
 
 import au.com.bytecode.opencsv.CSVParser;
-import com.my.sibyl.itemsets.hbase.dao.TransactionsDaoImpl;
 import com.my.sibyl.itemsets.model.Transaction;
-import com.my.sibyl.itemsets.util.Avro;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -28,89 +20,54 @@ import java.util.List;
  * @author abykovsky
  * @since 1/29/15
  */
-public class TransactionsDataLoadKVMapper extends
-        Mapper<LongWritable, Text, ImmutableBytesWritable, Put> {
+public class TransactionsDataLoadKVMapper extends TransactionsDataLoadKVMapperAbstract {
 
     private final static int NUM_FIELDS = 12;
 
-    CSVParser csvParser = new CSVParser();
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yy");
 
-    String tableName = "";
+    private final CSVParser csvParser = new CSVParser();
 
-    ImmutableBytesWritable hKey = new ImmutableBytesWritable();
-    KeyValue kv;
-
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yy");
-
-    /** {@inheritDoc} */
     @Override
-    protected void setup(Context context) throws IOException,
-            InterruptedException {
-        Configuration c = context.getConfiguration();
-
-        tableName = c.get("hbase.table.name");
+    protected boolean isHeader(Text value) {
+        return value.find("ORDER_ID") > -1;
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected void map(LongWritable key, Text value, Context context)
-            throws IOException, InterruptedException {
+    protected int getNumFields() {
+        return NUM_FIELDS;
+    }
 
-        if (value.find("ORDER_ID") > -1) {
-            // Skip header
-            return;
-        }
+    @Override
+    protected String getClassName() {
+        return "TransactionsDataLoadKVMapper";
+    }
 
-        String[] fields;
+    @Override
+    protected String[] parseLine(Text value) throws IOException {
+        return csvParser.parseLine(value.toString());
+    }
 
-        try {
-            fields = csvParser.parseLine(value.toString());
-        } catch (Exception ex) {
-            context.getCounter("TransactionsDataLoadKVMapper", "PARSE_ERRORS").increment(1);
-            return;
-        }
-
-        if (fields.length != NUM_FIELDS) {
-            context.getCounter("TransactionsDataLoadKVMapper", "INVALID_FIELD_LEN").increment(1);
-            return;
-        }
-
+    protected Transaction createTransaction(String fields[], Context context) {
         String orderDttm = fields[7];
         Date orderDate;
         try {
-            orderDate = dateFormat.parse(orderDttm);
+            orderDate = getDateFormat().parse(orderDttm);
         } catch (ParseException e) {
-            context.getCounter("TransactionsDataLoadKVMapper", "INVALID_ORDER_DATE").increment(1);
-            return;
+            context.getCounter(getClassName(), "INVALID_ORDER_DATE").increment(1);
+            return null;
         }
 
-        Transaction transaction;
-        try {
-            transaction = createTransaction(fields, orderDate);
-        } catch (NumberFormatException e) {
-            context.getCounter("TransactionsDataLoadKVMapper", "INVALID_NUMBER").increment(1);
-            return;
-        }
-
-        // Key: e.g. ":"
-        hKey.set(TransactionsDaoImpl.createRowKey(transaction));
-
-        if (!transaction.getItems().isEmpty()) {
-            Put put = new Put(hKey.get());
-            put.add(TransactionsDaoImpl.INFO_FAM, TransactionsDaoImpl.ITEMS_COLUMN, Avro.transactionToBytes(transaction));
-            context.write(hKey, put);
-        }
-
-        context.getCounter("TransactionsDataLoadKVMapper", "NUM_MSGS").increment(1);
-    }
-
-    private Transaction createTransaction(String fields[], Date orderDate) {
         Transaction transaction = new Transaction();
         transaction.setId(fields[0]);
         transaction.setItems(createItems(fields[2]));
         transaction.setQuantities(createQuantities(fields[5]));
         transaction.setCreateTimestamp(orderDate.getTime());
         return transaction;
+    }
+
+    private SimpleDateFormat getDateFormat() {
+        return dateFormat;
     }
 
     private List<Integer> createQuantities(String field) {

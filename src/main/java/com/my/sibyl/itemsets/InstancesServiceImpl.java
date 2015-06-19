@@ -2,8 +2,10 @@ package com.my.sibyl.itemsets;
 
 import com.my.sibyl.itemsets.dao.InstancesDao;
 import com.my.sibyl.itemsets.dao.ItemSetsDao;
+import com.my.sibyl.itemsets.dao.TransactionsDao;
 import com.my.sibyl.itemsets.hbase.dao.InstancesDaoImpl;
 import com.my.sibyl.itemsets.hbase.dao.ItemSetsDaoImpl;
+import com.my.sibyl.itemsets.hbase.dao.TransactionsDaoImpl;
 import com.my.sibyl.itemsets.model.Instance;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,9 +27,10 @@ public class InstancesServiceImpl implements InstancesService {
 
     @Inject
     private InstancesDao instancesDao;
-
     @Inject
     private ItemSetsDao itemSetsDao;
+    @Inject
+    private TransactionsDao transactionsDao;
 
     public InstancesServiceImpl() {
 
@@ -36,6 +39,7 @@ public class InstancesServiceImpl implements InstancesService {
     public InstancesServiceImpl(final HConnection connection) {
         this.instancesDao = new InstancesDaoImpl(connection);
         this.itemSetsDao = new ItemSetsDaoImpl(connection);
+        this.transactionsDao = new TransactionsDaoImpl(connection);
     }
 
     public void setInstancesDao(InstancesDao instancesDao) {
@@ -46,11 +50,16 @@ public class InstancesServiceImpl implements InstancesService {
         this.itemSetsDao = itemSetsDao;
     }
 
+    public void setTransactionsDao(TransactionsDao transactionsDao) {
+        this.transactionsDao = transactionsDao;
+    }
+
     @Override
     public void createInstance(Instance instance) {
         try {
             this.instancesDao.put(instance);
             this.itemSetsDao.createTable(instance.getName());
+            this.transactionsDao.createTable(instance.getName());
         } catch (IOException | HBaseException e) {
             throw new RuntimeException(e);
         }
@@ -61,6 +70,7 @@ public class InstancesServiceImpl implements InstancesService {
         try {
             this.instancesDao.delete(name);
             this.itemSetsDao.deleteTable(name);
+            this.transactionsDao.deleteTable(name);
         } catch (IOException | HBaseException e) {
             throw new RuntimeException(e);
         }

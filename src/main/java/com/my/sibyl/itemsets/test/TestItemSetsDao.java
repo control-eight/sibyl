@@ -112,21 +112,21 @@ public class TestItemSetsDao {
         transaction.setItems(Arrays.asList("1", "2", "3"));
         transaction.setQuantities(Collections.emptyList());
         transaction.setCreateTimestamp(DATE_FORMAT.parse("2000-01-01").getTime());
-        new TransactionsDaoImpl(connection).addTransaction(transaction);
+        new TransactionsDaoImpl(connection).addTransaction(InstancesService.DEFAULT, transaction);
 
         transaction = new Transaction();
         transaction.setId("-2");
         transaction.setItems(Arrays.asList("1", "2"));
         transaction.setQuantities(Collections.emptyList());
         transaction.setCreateTimestamp(DATE_FORMAT.parse("2000-01-01").getTime());
-        new TransactionsDaoImpl(connection).addTransaction(transaction);
+        new TransactionsDaoImpl(connection).addTransaction(InstancesService.DEFAULT, transaction);
 
         transaction = new Transaction();
         transaction.setId("-3");
         transaction.setItems(Arrays.asList("2", "3"));
         transaction.setQuantities(Collections.emptyList());
         transaction.setCreateTimestamp(DATE_FORMAT.parse("2000-01-01").getTime());
-        new TransactionsDaoImpl(connection).addTransaction(transaction);
+        new TransactionsDaoImpl(connection).addTransaction(InstancesService.DEFAULT, transaction);
     }
 
     private static void createInstance(HConnection connection) throws ParseException {
@@ -153,7 +153,7 @@ public class TestItemSetsDao {
         System.out.println(dateFormat.parse("16-OCT-13").getTime());*/
 
         List<Transaction> transactionList = new TransactionsDaoImpl(connection)
-                .scanTransactions(DATE_FORMAT.parse(startDate), DATE_FORMAT.parse(endDate));
+                .scanTransactions(InstancesService.DEFAULT, DATE_FORMAT.parse(startDate), DATE_FORMAT.parse(endDate));
         System.out.println(transactionList.size());
     }
 

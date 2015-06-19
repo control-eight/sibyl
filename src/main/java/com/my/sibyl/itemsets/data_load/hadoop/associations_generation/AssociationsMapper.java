@@ -7,6 +7,8 @@ import com.my.sibyl.itemsets.model.Association;
 import com.my.sibyl.itemsets.model.Transaction;
 import com.my.sibyl.itemsets.util.Avro;
 import com.my.sibyl.itemsets.util.ItemSetsGenerator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableMapper;
@@ -21,6 +23,8 @@ import java.util.Map;
  * @since 2/1/15
  */
 public class AssociationsMapper extends TableMapper<ImmutableBytesWritable, Association> {
+
+    private static final Log LOG = LogFactory.getLog(AssociationsMapper.class);
 
     public static enum Counters {
         ROWS,

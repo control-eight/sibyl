@@ -1,10 +1,14 @@
 package com.my.sibyl.itemsets.data_load.hadoop.transactions_dl;
 
 import com.my.sibyl.itemsets.ConfigurationHolder;
+import com.my.sibyl.itemsets.hbase.dao.InstancesDaoImpl;
 import com.my.sibyl.itemsets.hbase.dao.TransactionsDaoImpl;
+import com.my.sibyl.itemsets.model.Instance;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.IdentityTableReducer;
@@ -13,6 +17,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
+
+import java.util.Iterator;
 
 /**
  * HBase bulk import example<br>
@@ -29,14 +35,26 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class TransactionsDataLoadDriver {
 
     public static void main(String[] args) throws Exception {
-        ConfigurationHolder.getConfiguration();
+        org.apache.commons.configuration.Configuration envConfiguration = ConfigurationHolder.getConfiguration();
         Configuration conf = HBaseConfiguration.create();
         args = new GenericOptionsParser(conf, args).getRemainingArgs();
 
-        conf.set("hbase.table.name", TransactionsDaoImpl.TABLE_NAME_STRING);
+        Instance instance;
+        try(HConnection connection = HConnectionManager.createConnection(conf)) {
+            instance = new InstancesDaoImpl(connection).get(args[1]);
+        }
+
+        if(instance == null) throw new RuntimeException("Instance \"" + args[1] + "\" isn't found!");
+
+        conf.set("hbase.table.name", TransactionsDaoImpl.getTableName(instance.getName()));
 
         // Load hbase-site.xml
         HBaseConfiguration.addHbaseResources(conf);
+
+        for (Iterator<String> keyIter = envConfiguration.getKeys(); keyIter.hasNext();) {
+            String key = keyIter.next();
+            conf.set(key, envConfiguration.getString(key));
+        }
 
         Job job = new Job(conf, "HBase Bulk Import Transactions");
         //
@@ -52,7 +70,8 @@ public class TransactionsDataLoadDriver {
         job.setInputFormatClass(TextInputFormat.class);
 
         //hbase standard reducer which accepts Put, Delete any Mutation operation
-        TableMapReduceUtil.initTableReducerJob(TransactionsDaoImpl.TABLE_NAME_STRING, IdentityTableReducer.class, job);
+        TableMapReduceUtil.initTableReducerJob(TransactionsDaoImpl.getTableName(instance.getName()),
+                IdentityTableReducer.class, job);
 
         //read file from file system, in our case transactions csv
         FileInputFormat.addInputPath(job, new Path(args[0]));

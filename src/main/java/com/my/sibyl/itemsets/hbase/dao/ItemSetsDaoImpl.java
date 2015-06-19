@@ -6,10 +6,13 @@ import com.my.sibyl.itemsets.score_function.Recommendation;
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.MasterNotRunningException;
+import org.apache.hadoop.hbase.TableExistsException;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -48,6 +51,8 @@ import java.util.NavigableMap;
  */
 @Singleton
 public class ItemSetsDaoImpl implements ItemSetsDao {
+
+    private static final Log LOG = LogFactory.getLog(ItemSetsDaoImpl.class);
 
     public static final String TABLE_NAME = "item_sets";
     //public static final byte[] TABLE_NAME = Bytes.toBytes("item_sets");
@@ -285,7 +290,7 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
             HBaseAdmin hBaseAdmin = new HBaseAdmin(connection);
 
             HTableDescriptor defaultItemSetsDescriptor;
-            try(HTableInterface itemSets = connection.getTable(getTableName(InstancesService.DEFAULT))) {
+            try (HTableInterface itemSets = connection.getTable(getTableName(InstancesService.DEFAULT))) {
                 defaultItemSetsDescriptor = itemSets.getTableDescriptor();
             }
 
@@ -293,6 +298,8 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
             HTableDescriptor instanceItemSetsDescriptor = new HTableDescriptor(defaultItemSetsDescriptor);
             hBaseAdmin.createTable(instanceItemSetsDescriptor);
 
+        } catch (TableExistsException e) {
+            LOG.warn("Table " + getTableName(instanceName) + " is already exist. Skip creation");
         } catch (MasterNotRunningException | ZooKeeperConnectionException e) {
             throw new HBaseException(e);
         }

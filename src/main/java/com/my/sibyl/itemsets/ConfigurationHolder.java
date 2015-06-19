@@ -5,6 +5,8 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.Iterator;
 
@@ -13,6 +15,8 @@ import java.util.Iterator;
  * @since 1/21/15
  */
 public class ConfigurationHolder {
+
+    private static final Log LOG = LogFactory.getLog(ConfigurationHolder.class);
 
     private static final String PROPERTIES_NAME = "application.properties";
 
@@ -35,6 +39,8 @@ public class ConfigurationHolder {
                 if(envProperties == null) {
                     envProperties = System.getProperty(ENV_PROPERTIES);
                 }
+                LOG.info("Load env properties: " + envProperties);
+
                 try {
                     config.addConfiguration(new PropertiesConfiguration(envProperties));
                 } catch (ConfigurationException e) {
@@ -42,6 +48,7 @@ public class ConfigurationHolder {
                 }
             }
 
+            LOG.info("Load app properties: " + PROPERTIES_NAME);
             try {
                 config.addConfiguration(new PropertiesConfiguration(PROPERTIES_NAME));
             } catch (ConfigurationException e) {

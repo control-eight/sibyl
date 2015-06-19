@@ -89,19 +89,6 @@ public class SibylVerticle extends Verticle {
         connection = injector.getInstance(HConnection.class);
         mapper = injector.getInstance(ObjectMapper.class);
 
-        ItemSetsDao itemSetsDao = injector.getInstance(ItemSetsDao.class);
-        try {
-            System.out.println("res: " + itemSetsDao.getAssociations("default", "1107571", 2l));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        /*try {
-            associationService.addTransactionBinding("default", new TransactionBinding("1", Arrays.asList("1", "2", "3"), 123));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
         RouteMatcher matcher = new RouteMatcher();
         startHeartBeat(matcher);
         matcher.get("/api/associations/v1/transactions/", request -> {

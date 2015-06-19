@@ -89,6 +89,18 @@ public class CombinationsGeneratorTest {
         assertTrue("Contains 3-4", testResult.contains(set(Arrays.asList("3", "4"))));
     }
 
+    @Test
+    public void testTwoSimilarItemsProblem() {
+        Collection<Set<String>> testResult = combinationsGenerator.generateCombinations(Arrays.asList("6061", "6061"));
+        assertEquals("Size", 1, testResult.size());
+    }
+
+    @Test
+    public void testSeveralSimilarItemsProblem() {
+        Collection<Set<String>> testResult = combinationsGenerator.generateCombinations(Arrays.asList("6061", "7102", "6061"));
+        assertEquals("Size", 3, testResult.size());
+    }
+
     public static <T> Set<T> set(List<T> list) {
         return new HashSet<>(list);
     }

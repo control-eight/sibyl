@@ -87,7 +87,7 @@ public class AssociationServiceImpl implements AssociationService {
         transactionModel.setQuantities(Collections.emptyList());
         transactionModel.setCreateTimestamp(transaction.getCreateTimestamp());
 
-        transactionsDao.addTransaction(transactionModel);
+        transactionsDao.addTransaction(instanceName, transactionModel);
         createItemSets(instanceName, transaction.getItems());
     }
 

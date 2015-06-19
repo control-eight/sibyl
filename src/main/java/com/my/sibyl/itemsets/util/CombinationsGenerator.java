@@ -28,17 +28,21 @@ public class CombinationsGenerator<T> {
         for (T item : itemList) {
             Set<T> set = new HashSet<>();
             set.add(item);
-            itemSets.add(set);
-            lastItemInItemSets.add(item);
+            if(!itemSets.contains(set)) {
+                itemSets.add(set);
+            }
+            if(!lastItemInItemSets.contains(item)) {
+                lastItemInItemSets.add(item);
+            }
         }
 
         List<Set<T>> generated = new ArrayList<>();
-        generateItemSets(itemSets, lastItemInItemSets, itemList, generated);
+        generateItemSets(itemSets, lastItemInItemSets, new HashSet<T>(itemList), generated);
         return generated;
     }
 
     private void generateItemSets(List<Set<T>> itemSets, List<T> lastItemInItemSets,
-                                  List<T> transactionItems, List<Set<T>> generated) {
+                                  Set<T> transactionItems, List<Set<T>> generated) {
         for (int i = 0; i < itemSets.size(); i++) {
             Set<T> itemSet = itemSets.get(i);
 
@@ -54,7 +58,7 @@ public class CombinationsGenerator<T> {
     }
 
     //generate combinations for particular level
-    private List<Set<T>> generateNextLevel(Set<T> curLevelItemSet, List<T> transactionItems,
+    private List<Set<T>> generateNextLevel(Set<T> curLevelItemSet, Set<T> transactionItems,
                                                  T lastItemInItemSet, List<T> newLastItemInItemSets) {
         List<Set<T>> result = new ArrayList<>();
 
