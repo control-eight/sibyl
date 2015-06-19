@@ -21,7 +21,7 @@ public interface AssociationService {
     void addTransactionBinding(String instanceName, TransactionBinding transaction) throws IOException;
 
     List<ScoreFunctionResult<String>> getRecommendations(String instanceName, List<String> basketItems,
-                                                                 ScoreFunction<Recommendation> scoreFunction)
+                                                                 ScoreFunction scoreFunction)
             throws IOException;
 
     long getTransactionsCount(String instanceName) throws IOException;

@@ -162,7 +162,7 @@ public class SibylVerticle extends Verticle {
 
             List<String> basketItems = Arrays.asList(basketItemses);
 
-            ScoreFunction<Recommendation> scoreFunction = createBasicScoreFunction();
+            ScoreFunction scoreFunction = createBasicScoreFunction();
 
             try {
                 List<ScoreFunctionResult<String>> results = associationService
@@ -181,8 +181,8 @@ public class SibylVerticle extends Verticle {
         }));
     }
 
-    private ScoreFunction<Recommendation> createBasicScoreFunction() {
-        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(
+    private ScoreFunction createBasicScoreFunction() {
+        ScoreFunction scoreFunction = new BasicScoreFunction(
                 Arrays.asList(new ImmutablePair<>(Measure.COUNT, 10),
                         new ImmutablePair<>(Measure.CONFIDENCE, 0.0005)),
                 Arrays.asList(Measure.LIFT, Measure.COUNT),

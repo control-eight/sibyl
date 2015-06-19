@@ -118,7 +118,7 @@ public class AssociationServiceImpl implements AssociationService {
 
     @Override
     public List<ScoreFunctionResult<String>> getRecommendations(String instanceName, List<String> basketItems,
-                                                                        ScoreFunction<Recommendation> scoreFunction)
+                                                                        ScoreFunction scoreFunction)
             throws IOException {
         long transactionsCount = getTransactionsCount(instanceName);
 
@@ -146,7 +146,7 @@ public class AssociationServiceImpl implements AssociationService {
         return result;
     }
 
-    private void checkRequiredMeasuresForOutput(String instanceName, ScoreFunction<Recommendation> scoreFunction,
+    private void checkRequiredMeasuresForOutput(String instanceName, ScoreFunction scoreFunction,
                                                 List<Recommendation> recommendationList, long transactionsCount,
                                                 Set<Measure> loadedMeasures) throws IOException {
         for (Measure measure : scoreFunction.getOutputParams()) {
@@ -188,7 +188,7 @@ public class AssociationServiceImpl implements AssociationService {
         return recommendationList;
     }
 
-    private void filterPhase(String instanceName, ScoreFunction<Recommendation> scoreFunction,
+    private void filterPhase(String instanceName, ScoreFunction scoreFunction,
                              List<Recommendation> recommendationList, long transactionsCount, Set<Measure> loadedMeasures)
             throws IOException {
         for (Pair<Measure, Number> pair : scoreFunction.getThresholds()) {
@@ -209,7 +209,7 @@ public class AssociationServiceImpl implements AssociationService {
         }
     }
 
-    private void sortRecommendations(String instanceName, ScoreFunction<Recommendation> scoreFunction,
+    private void sortRecommendations(String instanceName, ScoreFunction scoreFunction,
                                      List<Recommendation> recommendationList,
                                      long transactionsCount, Set<Measure> loadedMeasures) throws IOException {
 
@@ -301,7 +301,7 @@ public class AssociationServiceImpl implements AssociationService {
     }
 
     private List<Recommendation> createBasicRecommendations(String instanceName, List<String> itemSets,
-                                                            ScoreFunction<Recommendation> scoreFunction) throws IOException {
+                                                            ScoreFunction scoreFunction) throws IOException {
         List<Recommendation> recommendationList = new ArrayList<>();
         for (String itemSet : itemSets) {
             long itemSetCount = itemSetsDao.getItemSetCount(instanceName, itemSet);

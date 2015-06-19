@@ -10,7 +10,7 @@ import java.util.List;
  * @author abykovsky
  * @since 1/24/15
  */
-public class BasicScoreFunction implements ScoreFunction<Recommendation> {
+public class BasicScoreFunction implements ScoreFunction {
 
     private List<Pair<Measure, Number>> thresholds;
 

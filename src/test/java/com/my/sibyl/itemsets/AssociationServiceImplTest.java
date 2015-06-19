@@ -101,7 +101,7 @@ public class AssociationServiceImplTest {
         /*boolean isLiftInUse = false;
         double confidence = 0.5;
         int maxResults = 10;
-        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(maxResults,
+        ScoreFunction> scoreFunction = new BasicScoreFunction(maxResults,
                 Arrays.asList(new ConfidenceRecommendationFilter() {
             @Override
             public boolean filter(Double value) {
@@ -109,7 +109,7 @@ public class AssociationServiceImplTest {
             }
         }), isLiftInUse);*/
 
-        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(
+        ScoreFunction scoreFunction = new BasicScoreFunction(
                 Collections.singletonList(new ImmutablePair<>(Measure.CONFIDENCE, 0.5)),
                 Collections.singletonList(Measure.LIFT),
             Arrays.asList(Measure.COUNT, Measure.SUPPORT, Measure.CONFIDENCE, Measure.LIFT),
@@ -156,7 +156,7 @@ public class AssociationServiceImplTest {
 
         when(mockItemSetsDao.getItemSetCount(DEFAULT, AssociationServiceImpl.TRANSACTIONS_COUNT_ROW_KEY)).thenReturn(1l);
 
-        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(
+        ScoreFunction scoreFunction = new BasicScoreFunction(
                 Collections.singletonList(new ImmutablePair<>(Measure.CONFIDENCE, 0.5)),
                 Arrays.asList(Measure.LIFT, Measure.COUNT),
                 Arrays.asList(Measure.COUNT, Measure.SUPPORT, Measure.CONFIDENCE, Measure.LIFT),

@@ -161,7 +161,7 @@ public class TestItemSetsDao {
         /*boolean isLiftInUse = true;
         double confidence = 0.0005;
         int maxResults = 10;
-        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(maxResults,
+        ScoreFunction> scoreFunction = new BasicScoreFunction(maxResults,
                 Arrays.asList(new ConfidenceRecommendationFilter() {
                     @Override
                     public boolean filter(Double value) {
@@ -169,7 +169,7 @@ public class TestItemSetsDao {
                     }
                 }), isLiftInUse);*/
 
-        ScoreFunction<Recommendation> scoreFunction = new BasicScoreFunction(
+        ScoreFunction scoreFunction = new BasicScoreFunction(
                 java.util.Collections.singletonList(new ImmutablePair<>(Measure.CONFIDENCE, 0.0005)),
                 java.util.Collections.singletonList(Measure.LIFT),
                 Arrays.asList(Measure.COUNT, Measure.SUPPORT, Measure.CONFIDENCE, Measure.LIFT),

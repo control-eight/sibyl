@@ -10,7 +10,7 @@ import java.util.List;
  * @author abykovsky
  * @since 1/24/15
  */
-public interface ScoreFunction<T> {
+public interface ScoreFunction {
 
     List<Pair<Measure, Number>> getThresholds();
 
