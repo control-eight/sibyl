@@ -1,10 +1,17 @@
 package com.my.sibyl.itemsets.score_function;
 
+import org.apache.hadoop.io.Writable;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
+
 /**
  * @author abykovsky
  * @since 1/24/15
  */
-public class Recommendation {
+public class Recommendation implements Serializable, Writable {
 
     //filling during creation of basic recommendations
     private String itemSet;
@@ -129,5 +136,31 @@ public class Recommendation {
                 ", lift=" + lift +
                 ", score=" + score +
                 '}';
+    }
+
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.writeUTF(itemSet);
+        out.writeLong(itemSetCount);
+        out.writeUTF(associationId);
+        out.writeLong(associationCount);
+        out.writeLong(countOfAssociationAsItemSet);
+        out.writeDouble(support);
+        out.writeDouble(confidence);
+        out.writeDouble(lift);
+        out.writeDouble(score);
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        itemSet = in.readUTF();
+        itemSetCount = in.readLong();
+        associationId = in.readUTF();
+        associationCount = in.readLong();
+        countOfAssociationAsItemSet = in.readLong();
+        support = in.readDouble();
+        confidence = in.readDouble();
+        lift = in.readDouble();
+        score = in.readDouble();
     }
 }

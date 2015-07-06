@@ -27,7 +27,7 @@ public class AssociationsMapper extends TableMapper<ImmutableBytesWritable, Asso
     private static final Log LOG = LogFactory.getLog(AssociationsMapper.class);
 
     public static enum Counters {
-        ROWS,
+        ROWS_PROCESSED,
         ITEM_SET_WITH_ASSOCIATIONS,
         ASSOCIATIONS
     }
@@ -66,6 +66,6 @@ public class AssociationsMapper extends TableMapper<ImmutableBytesWritable, Asso
             }
         }
 
-        context.getCounter(Counters.ROWS).increment(1);
+        context.getCounter(Counters.ROWS_PROCESSED).increment(1);
     }
 }

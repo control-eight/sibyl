@@ -333,4 +333,9 @@ public class ItemSetsDaoImpl implements ItemSetsDao {
             return resultMap;
         }
     }
+
+    public static Scan makeItemSetsScan() {
+        Scan scan = new Scan();
+        return scan;
+    }
 }
